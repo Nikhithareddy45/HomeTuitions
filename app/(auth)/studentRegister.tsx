@@ -13,6 +13,7 @@ import {
   validateUsername,
 } from '@/utils/validation';
 import React, { useState } from 'react';
+import { useFormReset } from '@/utils/useFormReset';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -46,6 +47,30 @@ const StudentRegistrationSinglePage: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const resetForm = () => {
+    setFormData({
+      username: 'nikhh',
+      email: 'nikkireddyperugu@gmail.com',
+      mobile_number: '1234567890',
+      password: '123456',
+      confirm_password: '123456',
+      date_of_birth: '2000-01-01',
+      student_class: '10',
+      address: {
+        street: 'Moosapet',
+        city: 'Hyderabad',
+        state: 'Telangana',
+        pin_code: '500001',
+        country: 'India',
+      },
+    });
+    setErrors({});
+    setSelectedLocation(null);
+    setCurrentStep(1);
+  };
+
+  useFormReset(resetForm);
 
   const handleChange = (key: string, value: string) => {
     setFormData(prev => {
@@ -138,8 +163,14 @@ const StudentRegistrationSinglePage: React.FC = () => {
   const handleSubmit = async () => {
     const isValid = validateStep1();
     if (!isValid) {
-      // Only log, no Alert
-      console.log('Form has validation errors, not submitting.');
+      const errorMessages = Object.entries(errors)
+        .map(([field, message]) => `❌ ${message}`)
+        .join('\n');
+      Alert.alert(
+        '⚠️ Validation Errors',
+        `\n${errorMessages}\n\nPlease fix the errors above and try again.`,
+        [{ text: 'OK', onPress: () => { } }],
+      );
       return;
     }
 
@@ -163,24 +194,18 @@ const StudentRegistrationSinglePage: React.FC = () => {
       };
 
       const response = await registerStudent(payload);
-      console.log('Register success:', response?.data);
+      if (!response.ok) {
+        Alert.alert(
+          'Success',
+          'Student registered successfully',
+          [{ text: 'OK', onPress: () => { } }],
+        );
+      }
+      console.log('Register success:', response);
 
       // Reset state silently
       setFormData({
-        username: '',
-        email: '',
-        mobile_number: '',
-        password: '',
-        confirm_password: '',
-        date_of_birth: '',
-        student_class: '',
-        address: {
-          street: '',
-          city: '',
-          state: '',
-          pin_code: '',
-          country: '',
-        },
+        ...formData
       });
       setErrors({});
       setSelectedLocation(null);
@@ -195,10 +220,10 @@ const StudentRegistrationSinglePage: React.FC = () => {
 
         Object.entries(data).forEach(([field, val]) => {
           const msg = Array.isArray(val) ? val.join(' ') : String(val);
-          
+
           // Check if it's an existence error (username/email already exists)
-          if ((field === 'username' || field === 'email') && 
-              (msg.toLowerCase().includes('exist') || msg.toLowerCase().includes('already'))) {
+          if ((field === 'username' || field === 'email') &&
+            (msg.toLowerCase().includes('exist') || msg.toLowerCase().includes('already'))) {
             existenceErrors.push(`❌ ${msg}`);
           } else {
             fieldErrors[field] = msg;
@@ -210,7 +235,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
           Alert.alert(
             '⚠️ Registration Error',
             `\n${existenceErrors.join('\n')}\n\nPlease use different credentials and try again.`,
-            [{ text: 'OK', onPress: () => {} }],
+            [{ text: 'OK', onPress: () => { } }],
           );
         }
         if (Object.keys(fieldErrors).length > 0) {
@@ -220,7 +245,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
           Alert.alert(
             '⚠️ Validation Error',
             `\n${otherErrors}`,
-            [{ text: 'OK', onPress: () => {} }],
+            [{ text: 'OK', onPress: () => { } }],
           );
         }
       } else {
@@ -243,7 +268,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
       Alert.alert(
         '⚠️ Validation Errors',
         `\n${errorMessages}\n\nPlease fix the errors above and try again.`,
-        [{ text: 'OK', onPress: () => {} }],
+        [{ text: 'OK', onPress: () => { } }],
       );
       return;
     }
@@ -258,7 +283,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
       className="flex-1"
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={{ padding: 24, paddingTop: 40 }}
         scrollEnabled={true}
         keyboardShouldPersistTaps="handled"
@@ -275,17 +300,15 @@ const StudentRegistrationSinglePage: React.FC = () => {
         <View className="flex-row justify-center mb-8">
           <View className="flex-row items-center">
             <View
-              className={`w-8 h-8 rounded-full items-center justify-center ${
-                currentStep === 1 ? 'bg-primary' : 'bg-gray-300'
-              }`}
+              className={`w-8 h-8 rounded-full items-center justify-center ${currentStep === 1 ? 'bg-primary' : 'bg-gray-300'
+                }`}
             >
               <Text className="text-white font-bold">1</Text>
             </View>
             <View className="w-12 h-1 bg-gray-300 mx-2" />
             <View
-              className={`w-8 h-8 rounded-full items-center justify-center ${
-                currentStep === 2 ? 'bg-primary' : 'bg-gray-300'
-              }`}
+              className={`w-8 h-8 rounded-full items-center justify-center ${currentStep === 2 ? 'bg-primary' : 'bg-gray-300'
+                }`}
             >
               <Text className="text-white font-bold">2</Text>
             </View>
@@ -297,7 +320,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
           <View className="gap-2">
             <Input
               label="Username"
-              icon="User"
+              iconName="User"
               value={formData.username}
               onChangeText={text => handleChange('username', text)}
               placeholder="Enter your username"
@@ -306,7 +329,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
             />
             <Input
               label="Email Address"
-              icon="Mail"
+              iconName="Mail"
               keyboardType="email-address"
               value={formData.email}
               onChangeText={text => handleChange('email', text)}
@@ -316,7 +339,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
             />
             <Input
               label="Mobile Number"
-              icon="Phone"
+              iconName="Phone"
               keyboardType="phone-pad"
               value={formData.mobile_number}
               onChangeText={text => handleChange('mobile_number', text)}
@@ -342,7 +365,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
             />
             <Input
               label="Student Class"
-              icon="Briefcase"
+              iconName="Briefcase"
               value={formData.student_class}
               onChangeText={text => handleChange('student_class', text)}
               placeholder="e.g., 10th Grade"
@@ -351,7 +374,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
             />
             <Input
               label="Password"
-              icon="Lock"
+              iconName="Lock"
               secureTextEntry
               value={formData.password}
               onChangeText={text => handleChange('password', text)}
@@ -361,7 +384,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
             />
             <Input
               label="Confirm Password"
-              icon="Lock"
+              iconName="Lock"
               secureTextEntry
               value={formData.confirm_password}
               onChangeText={text => handleChange('confirm_password', text)}

@@ -26,7 +26,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <TouchableOpacity
       className={`
-        flex-row items-center justify-center px-6 py-4 rounded-2xl shadow-lg
+        flex-row items-center justify-center px-6 py-4 rounded-2xl shadow-lg w-[90%] mx-auto
         ${!outline 
           ? 'bg-primary shadow-[0_4px_12px_rgba(79,70,229,0.3)]' 
           : 'bg-secondary border-2 border-primary'

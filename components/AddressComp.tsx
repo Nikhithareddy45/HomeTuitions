@@ -76,8 +76,8 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
     return (
         <View>
-            <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-xl font-semibold text-black">
+            <View className="flex-row justify-around items-center mb-3">
+                <Text className="text-lg font-semibold text-black">
                     Address Information
                 </Text>
                 <Button
@@ -85,14 +85,15 @@ const AddressForm: React.FC<AddressFormProps> = ({
                     onPress={handleUseCurrentLocation}
                     outline
                     disabled={loadingLocation}
-                    className="px-3 py-2"
+                    className="w-[45%]"
                     icon="map-pin"
+
                 />
             </View>
 
             <View className="flex-1 gap-3">
                 <Input
-                    icon="MapPin"
+                    iconName="MapPin"
                     label="Street"
                     value={address.street}
                     onChangeText={text => handleFieldChange('street', text)}
@@ -101,14 +102,14 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
 
                 <Input
-                    icon="MapPin"
+                    iconName="MapPin"
                     label="City"
                     value={address.city}
                     onChangeText={text => handleFieldChange('city', text)}
                     placeholder="Enter city"
                 />
                 <Input
-                    icon="MapPin"
+                    iconName="MapPin"
                     label="Pin Code"
                     keyboardType="number-pad"
                     value={address.pin_code}
@@ -116,14 +117,14 @@ const AddressForm: React.FC<AddressFormProps> = ({
                     placeholder="Enter pin"
                 />
                 <Input
-                    icon="MapPin"
+                    iconName="MapPin"
                     label="State"
                     value={address.state}
                     onChangeText={text => handleFieldChange('state', text)}
                     placeholder="Enter state"
                 />
                 <Input
-                    icon="Globe"
+                    iconName="Globe"
                     label="Country"
                     value={address.country}
                     onChangeText={text => handleFieldChange('country', text)}

@@ -1,17 +1,11 @@
 import axios from "axios";
-import { FormData } from "../types/authTypes";
+import { FormData,TutorData } from "../types/authTypes";
 import { base_url } from "../utils/url";
 
-export interface StudentRegistrationPayload {
-  username: string;
-  email: string;
-  mobile_number: string;
-  date_of_birth: string;
-  student_class: string;
-}
 
-export const registerStudent = async (payload: StudentRegistrationPayload): Promise<any> => {
-  try {
+export const registerStudent = async (payload: FormData): Promise<any> => {
+  try { 
+    console.log("payload", payload )
     const config = {
       headers: { "Content-Type": "application/json" },
     };
@@ -20,25 +14,28 @@ export const registerStudent = async (payload: StudentRegistrationPayload): Prom
       payload,
       config
     );
+    console.log(response.data)
     return response.data;
   } catch (error: any) {
     console.error("Registration error:", error.response?.data || error.message);
     throw error;
   }
 };
-
-export const UserAPI = async (userData: FormData): Promise<any> => {
-  try {
-    const config: any = {};
-    if (userData instanceof FormData) {
-      config.headers = { "Content-Type": "multipart/form-data" };
-    } else {
-      config.headers = { "Content-Type": "application/json" };
-    }
-    const response = await axios.post(`${base_url}/api/users/v1/auth/register/`, userData, config);
+export const registerTutor = async (payload: TutorData): Promise<any> => {
+  try { 
+    console.log("payload", payload )
+    const config = {
+      headers: { "Content-Type": "application/json" },
+    };
+    const response = await axios.post(
+      `${base_url}/api/tutors/v1/auth/register/`,
+      payload,
+      config
+    );
+    console.log(response.data)
     return response.data;
   } catch (error: any) {
-    console.error("API error response:", error.response?.data);
+    console.error("Registration error:", error.response?.data || error.message);
     throw error;
   }
 };

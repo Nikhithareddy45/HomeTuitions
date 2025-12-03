@@ -9,7 +9,7 @@ const LandingScreen: React.FC = () => {
   const router = useRouter();
 
   const handleLoginPress = () => {
-    router.push('/(auth)/studentRegister');
+    router.push('/(auth)/tutorRegister');
   };
 
   return (

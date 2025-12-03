@@ -1,4 +1,5 @@
-import Icon, { LucideIconName } from '@/components/ui/Icon';
+import Icon from '@/components/ui/IconComp';
+import { LucideIconName } from '@/types/common';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useEffect, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
