@@ -51,13 +51,15 @@ const DOBPicker: React.FC<DOBPickerProps> = ({ value, onChange, error, label = "
     <View className="mb-4 w-[90%] mx-auto gap-2">
       {/* Label with left icon */}
       <View className="flex-row items-center mb-1">
-        <Icon
-          name={icon}
-          size={16}
-          color="#115bca"
-          strokeWidth={2}
-        />
-        <Text className="text-md font-semibold text-primary ml-2">
+        <View className="mr-3">
+          <Icon
+            name={icon}
+            size={18}
+            color="#115bca"
+            strokeWidth={2}
+          />
+        </View>
+        <Text className="text-md font-semibold text-primary">
           {label}
         </Text>
       </View>
