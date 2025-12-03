@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
 import AddressForm from '@/components/AddressComp';
 import Button from '@/components/ui/Button';
 import DOBPicker from '@/components/ui/DOBInput';
 import Input from '@/components/ui/Input';
+import { registerStudent } from '@/services/auth';
 import {
   validateConfirmPassword,
   validateDateOfBirth,
@@ -19,7 +12,16 @@ import {
   validateStudentClass,
   validateUsername,
 } from '@/utils/validation';
-import { registerStudent } from '@/services/auth';
+import React, { useState } from 'react';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
+
 
 const StudentRegistrationSinglePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -62,10 +64,9 @@ const StudentRegistrationSinglePage: React.FC = () => {
         else delete newErrors.email;
       }
 
+      // Skip real-time validation for mobile_number to avoid black ribbon error
       if (key === 'mobile_number') {
-        const err = validateMobileNumber(value);
-        if (err) newErrors.mobile_number = err;
-        else delete newErrors.mobile_number;
+        delete newErrors.mobile_number;
       }
 
       if (key === 'student_class') {
@@ -102,11 +103,6 @@ const StudentRegistrationSinglePage: React.FC = () => {
     }));
   };
 
-  const handleMapPress = (e: any) => {
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    setSelectedLocation({ lat: latitude, lng: longitude });
-    handleAddressChange('street', `Lat:${latitude}, Lng:${longitude}`);
-  };
 
   const validateStep1 = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -136,12 +132,6 @@ const StudentRegistrationSinglePage: React.FC = () => {
     if (confirmPasswordError) newErrors.confirm_password = confirmPasswordError;
 
     setErrors(newErrors);
-
-    // Just log, don't block with alerts
-    if (Object.keys(newErrors).length > 0) {
-      console.log('Validation errors (step1):', newErrors);
-    }
-
     return Object.keys(newErrors).length === 0;
   };
 
@@ -196,20 +186,46 @@ const StudentRegistrationSinglePage: React.FC = () => {
       setSelectedLocation(null);
       setCurrentStep(1);
     } catch (err: any) {
-      console.log('Register error raw:', err);
+      // Suppress console error to avoid black error message at bottom
       const data = err?.response?.data;
 
       if (data && typeof data === 'object') {
         const fieldErrors: Record<string, string> = {};
+        const existenceErrors: string[] = [];
+
         Object.entries(data).forEach(([field, val]) => {
           const msg = Array.isArray(val) ? val.join(' ') : String(val);
-          fieldErrors[field] = msg;
+          
+          // Check if it's an existence error (username/email already exists)
+          if ((field === 'username' || field === 'email') && 
+              (msg.toLowerCase().includes('exist') || msg.toLowerCase().includes('already'))) {
+            existenceErrors.push(`❌ ${msg}`);
+          } else {
+            fieldErrors[field] = msg;
+          }
         });
-        setErrors(prev => ({ ...prev, ...fieldErrors }));
-        console.log('Backend field errors:', fieldErrors);
+
+        // Show existence errors as popup alert
+        if (existenceErrors.length > 0) {
+          Alert.alert(
+            '⚠️ Registration Error',
+            `\n${existenceErrors.join('\n')}\n\nPlease use different credentials and try again.`,
+            [{ text: 'OK', onPress: () => {} }],
+          );
+        }
+        if (Object.keys(fieldErrors).length > 0) {
+          const otherErrors = Object.entries(fieldErrors)
+            .map(([field, msg]) => `❌ ${msg}`)
+            .join('\n');
+          Alert.alert(
+            '⚠️ Validation Error',
+            `\n${otherErrors}`,
+            [{ text: 'OK', onPress: () => {} }],
+          );
+        }
       } else {
-        console.log(
-          'Register error message:',
+        Alert.alert(
+          '⚠️ Registration Error',
           err?.response?.data?.message || err.message || 'Registration failed',
         );
       }
@@ -221,7 +237,14 @@ const StudentRegistrationSinglePage: React.FC = () => {
   const goNext = () => {
     const isValid = validateStep1();
     if (!isValid) {
-      console.log('Cannot go to step 2, step1 invalid.');
+      const errorMessages = Object.entries(errors)
+        .map(([field, message]) => `❌ ${message}`)
+        .join('\n');
+      Alert.alert(
+        '⚠️ Validation Errors',
+        `\n${errorMessages}\n\nPlease fix the errors above and try again.`,
+        [{ text: 'OK', onPress: () => {} }],
+      );
       return;
     }
     setCurrentStep(2);
@@ -231,10 +254,15 @@ const StudentRegistrationSinglePage: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
       className="flex-1"
     >
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 40 }}>
+      <ScrollView 
+        contentContainerStyle={{ padding: 24, paddingTop: 40 }}
+        scrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="items-center mb-8">
           <Text className="text-3xl font-bold text-primary text-center mb-2">
             Student Registration
@@ -263,6 +291,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
             </View>
           </View>
         </View>
+
 
         {currentStep === 1 && (
           <View className="gap-2">

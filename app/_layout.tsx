@@ -5,6 +5,9 @@ import { View, ActivityIndicator, Text, Platform } from 'react-native';
 import { useEffect } from 'react';
 import SafeArea from '@/components/ui/SafeArea';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { LogBox } from "react-native";
+
+LogBox.ignoreAllLogs();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
