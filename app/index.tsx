@@ -4,12 +4,16 @@ import Button from '../components/ui/Button';
 import { useRouter } from 'expo-router';
 import { Images } from '@/constants/images';
 const { height } = Dimensions.get('window');
+
 const cHeight = height * 0.45;
 const Index: React.FC = () => {
   const router = useRouter();
 
-  const handleLoginPress = () => {
-    router.push('/(auth)/login');
+  const handleLoginPress = (role: string) => {
+    router.push({
+      pathname: "/(auth)/login",
+      params: { role },
+    });
   };
 
   return (
@@ -17,10 +21,10 @@ const Index: React.FC = () => {
     <View
       className="flex-1 mx-auto w-[85%] justify-center"
     >
-      <View className="w-full mx-auto border">
+      <View className="w-full mx-auto h-[40%] ">
         <Image
           source={Images.HomeScreenImage}
-          style={{ width: '100%', height: '40%' }}
+          style={{ width: '100%', height: '100%' }}
           className="rounded-2xl"
         />
 
@@ -40,13 +44,13 @@ const Index: React.FC = () => {
       <View className="items-center gap-3">
         <Button
           title="Find Tutor"
-          onPress={handleLoginPress}
+          onPress={() => handleLoginPress('student')}
           className="w-[90%]"
           icon="search"
         />
         <Button
           title="Become Tutor"
-          onPress={handleLoginPress}
+          onPress={() => handleLoginPress('tutor')}
           outline={true}
           className="w-[90%]"
           icon="user-plus"

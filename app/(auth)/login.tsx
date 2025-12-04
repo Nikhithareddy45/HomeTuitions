@@ -6,14 +6,17 @@ import Button from '@/components/ui/Button';
 import { loginSchema } from '@/utils/validationYup';
 import { LoginAPI } from '@/services/auth';
 import { Link, useRouter } from 'expo-router';
-
+import { useLocalSearchParams } from "expo-router";
 const Login: React.FC = () => {
+
   //studdent: test 123456
   //tutor : professor 123456
+  const { role } = useLocalSearchParams();
   const router = useRouter();
+  const defaultEmail = (role==='student'?'test':'professor')
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
+    username: defaultEmail,
     password: '123456'
 
   })
@@ -63,11 +66,12 @@ const Login: React.FC = () => {
       const response = await LoginAPI(payload)
       if (!response.ok) {
         Alert.alert(
-          'Success',
-          'Student registered successfully',
+          'Success', 
+          'Registered successfully',
           [{ text: 'OK', onPress: () => { } }],
         );
       }
+      console.log(response.role)
       console.log('Register success:', response);
 
       // Reset state silently
@@ -136,7 +140,7 @@ const Login: React.FC = () => {
       >
         <View className='flex-1 items-center justify-center '>
           <View className='gap-3 p-6 w-full mx-auto border-2 rounded-xl shadow-md border-gray-300'>
-            <Text className='text-primary text-3xl font-bold text-center mb-3 '>Login</Text>
+            <Text className='text-primary text-3xl font-bold text-center mb-3 '>Login as {role} </Text>
             <View className='w-[90%] mx-auto'>
               <Input
                 label="Username"
@@ -169,7 +173,7 @@ const Login: React.FC = () => {
           </View>
           <View className='flex-row items-center justify-center mt-4 gap-2'>
             <Text>Don&apos;t have an account?</Text>
-            <Link href="/(auth)/studentRegister">
+            <Link href={role==='student'? '/(auth)/studentRegister':'/(auth)/tutorRegister' }>
               <Text className='text-primary font-bold'>Sign Up</Text>
             </Link>
           </View>
