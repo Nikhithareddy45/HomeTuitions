@@ -1,11 +1,9 @@
-import '../global.css'
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { View, ActivityIndicator, Text, Platform } from 'react-native';
 import { useEffect } from 'react';
+import { ActivityIndicator, LogBox, Text, View } from 'react-native';
+import '../global.css';
 import SafeArea from '@/components/ui/SafeArea';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { LogBox } from "react-native";
 
 LogBox.ignoreAllLogs();
 
@@ -47,20 +45,12 @@ export default function RootLayout() {
   }
 
   return (
-    //  <KeyboardAwareScrollView
-    //     contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 }}
-    //     keyboardShouldPersistTaps="handled"
-    //     enableOnAndroid={true}
-    //     extraScrollHeight={10}
-    //     showsVerticalScrollIndicator={true}
-    //   >
-      <SafeArea>
-      <Stack >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack>
-    </SafeArea>
-    // </KeyboardAwareScrollView>
-
-  )
+   <SafeArea>
+     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
+   </SafeArea>
+  );
 }

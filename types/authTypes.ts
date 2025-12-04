@@ -1,5 +1,5 @@
 
-export interface FormData {
+export interface UserData {
   username: string;
   email: string;
   mobile_number: string;
@@ -11,31 +11,32 @@ export interface FormData {
 }
 
 export interface LoginData {
-    email: string;
+    username: string;
     password: string;
 }
 
 export interface TutorData {
   username: string;
   email: string;
-  mobile_number: string;
   password: string;
-  confirm_password: string;
-  address: Address;
-  subjects?: string[];
-  board?: string[];
-  classes?: string[];
-  education_qualification?: string;
-  certificates?: string;
-  image?: string;
-  availabilities?: AvailabilityWindow[];
-  about?: string;
-  rating?: number;  
-  reviews?: number;
-  gender?: string;
-  language?: string;
-  price?: number;
-  experience?: number | string;
+  mobile_number: string;
+  street: string;
+  city: string;
+  state: string;
+  pin_code: string;
+  country: string;
+  subjects: string[];
+  board: string[];
+  classes: string[];
+  education_qualification: string;
+  certificates: string;
+  price: number;
+  experience: number;
+  image: File | null;
+  availabilities: AvailabilityWindow[];
+  about: string;
+  gender: string;
+  language: string;
 }
 
 export interface AvailabilityWindow {

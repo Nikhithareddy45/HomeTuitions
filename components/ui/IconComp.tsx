@@ -7,7 +7,7 @@ export const Icon: React.FC<IconProps> = ({
   color = '#115bca',
   strokeWidth = 2
 }) => {
-  const IconComponent = LucideIcons[name] as React.ComponentType<any>;
+  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<any>>)[name];
   
   if (!IconComponent) {
     console.warn(`Icon "${name}" not found in lucide-react-native`);

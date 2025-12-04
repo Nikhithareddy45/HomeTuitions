@@ -49,7 +49,7 @@ const DOBPicker: React.FC<DOBPickerProps> = ({ value, onChange, error, label = "
     }) || "";
 
   return (
-    <View className="mb-4 w-[90%] mx-auto gap-2">
+    <View className="mb-4 gap-2">
       {/* Label with left icon */}
       <View className="flex-row items-center mb-1">
         <View className="mr-3">

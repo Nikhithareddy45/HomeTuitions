@@ -30,12 +30,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
     const handleFieldChange = (key: keyof Address, value: string) => {
         onChange({ ...address, [key]: value });
     };
-
-    const handleMapPress = (e: any) => {
-        const { latitude, longitude } = e.nativeEvent.coordinate;
-        onLocationChange({ lat: latitude, lng: longitude });
-    };
-
     const fillAddressFromCoords = async (latitude: number, longitude: number) => {
         try {
             const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
@@ -77,17 +71,16 @@ const AddressForm: React.FC<AddressFormProps> = ({
     return (
         <View>
             <View className="flex-row justify-around items-center mb-3">
-                <Text className="text-lg font-semibold text-black">
+                {/* <Text className="text-lg font-semibold text-black">
                     Address Information
-                </Text>
+                </Text> */}
                 <Button
                     title={loadingLocation ? 'Detecting...' : 'Use my location'}
                     onPress={handleUseCurrentLocation}
                     outline
                     disabled={loadingLocation}
-                    className="w-[45%]"
+                    className="w-[50%] border-2"
                     icon="map-pin"
-
                 />
             </View>
 

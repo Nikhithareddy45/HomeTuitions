@@ -8,18 +8,26 @@ import TimePicker from '@/components/ui/TimePicker';
 import { board_options, class_options, gender_options, section_options, subject_options } from '@/constants/constants';
 import { registerTutor } from '@/services/auth';
 import { useFormReset } from '@/utils/useFormReset';
-
 import {
-  validateConfirmPassword,
-  validateEmail,
-  validateMobileNumber,
-  validatePassword,
-  validateUsername,
-} from '@/utils/validation';
+  aboutValidation,
+  boardValidation,
+  classesValidation,
+  confirmPasswordValidation,
+  educationQualificationValidation,
+  emailValidation,
+  experienceValidation,
+  genderValidation,
+  languageValidation,
+  mobileNumberValidation,
+  passwordValidation,
+  priceValidation,
+  subjectsValidation,
+  tutorRegistrationSchema,
+  usernameValidation
+} from '@/utils/validationYup';
 import React, { useState } from 'react';
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -43,7 +51,7 @@ const TutorRegister: React.FC = () => {
     confirm_password: '123456',
     gender: 'Male',
     language: 'English',
-    image: '',
+    image: null as File | null,
 
     subjects: [] as string[],
     classes: [] as string[],
@@ -52,7 +60,7 @@ const TutorRegister: React.FC = () => {
     education_qualification: '',
     experience: '3',
     price: '300',
-    availabilities: [] as Array<{ section: string; startTime: string; endTime: string }>,
+    availabilities: [] as { section: string; startTime: string; endTime: string }[],
     about: 'Well experienced tutor',
 
     address: {
@@ -79,7 +87,7 @@ const TutorRegister: React.FC = () => {
       confirm_password: '123456',
       gender: 'Male',
       language: 'English',
-      image: '',
+      image: null,
       subjects: [],
       classes: [],
       board: [],
@@ -107,31 +115,45 @@ const TutorRegister: React.FC = () => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const pickImage = () => {
-    Alert.prompt(
+  const pickImage = async () => {
+    Alert.alert(
       'Add Profile Image',
-      'Enter image URL or select from device',
+      'Choose an option',
       [
-        { text: 'Cancel', onPress: () => { }, style: 'cancel' },
         {
-          text: 'Paste URL',
-          onPress: (url: string | undefined) => {
-            if (url && url.trim()) {
-              handleChange('image', url.trim());
-            }
+          text: 'Cancel',
+          onPress: () => { },
+          style: 'cancel',
+        },
+        {
+          text: 'Paste Image URL',
+          onPress: () => {
+            Alert.prompt(
+              'Image URL',
+              'Paste the full image URL',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Add',
+                  onPress: (url: string | undefined) => {
+                    if (url && url.trim()) {
+                      // For backend URLs, we'll just store it as null
+                      // The backend URL will be shown after successful registration
+                      setFormData(prev => ({
+                        ...prev,
+                        image: null, // Backend image URLs handled after registration
+                      }));
+                      Alert.alert('Note', 'Backend image URL will be displayed after registration');
+                    }
+                  },
+                },
+              ],
+              'plain-text',
+            );
           },
         },
       ],
-      'plain-text',
-      formData.image,
     );
-  };
-
-  const handleAddressChange = (key: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      address: { ...prev.address, [key]: value },
-    }));
   };
 
   const addAvailability = () => {
@@ -157,88 +179,199 @@ const TutorRegister: React.FC = () => {
     });
   };
 
-  const validateStep1 = (): boolean => {
+  const validateStep1 = async (): Promise<boolean> => {
     const newErrors: Record<string, string> = {};
 
-    const u = validateUsername(formData.username);
-    if (u) newErrors.username = u;
+    // Validate username
+    try {
+      await usernameValidation.validate(formData.username);
+    } catch (err: any) {
+      newErrors.username = err.message;
+    }
 
-    const e = validateEmail(formData.email);
-    if (e) newErrors.email = e;
+    // Validate email
+    try {
+      await emailValidation.validate(formData.email);
+    } catch (err: any) {
+      newErrors.email = err.message;
+    }
 
-    const m = validateMobileNumber(formData.mobile_number);
-    if (m) newErrors.mobile_number = m;
+    // Validate mobile number
+    try {
+      await mobileNumberValidation.validate(formData.mobile_number);
+    } catch (err: any) {
+      newErrors.mobile_number = err.message;
+    }
 
-    const p = validatePassword(formData.password);
-    if (p) newErrors.password = p;
+    // Validate password
+    try {
+      await passwordValidation.validate(formData.password);
+    } catch (err: any) {
+      newErrors.password = err.message;
+    }
 
-    const cp = validateConfirmPassword(formData.password, formData.confirm_password);
-    if (cp) newErrors.confirm_password = cp;
+    // Validate confirm password
+    try {
+      await confirmPasswordValidation.validate(formData.confirm_password, {
+        context: { password: formData.password },
+      });
+    } catch (err: any) {
+      newErrors.confirm_password = err.message;
+    }
 
-    if (!formData.gender) newErrors.gender = 'Please select gender';
-    if (!formData.language) newErrors.language = 'Please enter language';
+    // Validate gender
+    try {
+      await genderValidation.validate(formData.gender);
+    } catch (err: any) {
+      newErrors.gender = err.message;
+    }
+
+    // Validate language
+    try {
+      await languageValidation.validate(formData.language);
+    } catch (err: any) {
+      newErrors.language = err.message;
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateStep2 = (): boolean => {
+  const validateStep2 = async (): Promise<boolean> => {
     const newErrors: Record<string, string> = {};
 
-    if (formData.subjects.length === 0) newErrors.subjects = 'Select at least one subject';
-    if (formData.board.length === 0) newErrors.board = 'Select at least one board';
-    if (formData.classes.length === 0) newErrors.classes = 'Select at least one class';
-    if (!formData.education_qualification) newErrors.education_qualification = 'Required';
-    if (!formData.experience) newErrors.experience = 'Required';
-    if (!formData.price) newErrors.price = 'Required';
-    if ((formData.about || '').trim().length < 20)
-      newErrors.about = 'Minimum 20 characters about yourself';
+    // Validate subjects
+    try {
+      await subjectsValidation.validate(formData.subjects);
+    } catch (err: any) {
+      newErrors.subjects = err.message;
+    }
+
+    // Validate board
+    try {
+      await boardValidation.validate(formData.board);
+    } catch (err: any) {
+      newErrors.board = err.message;
+    }
+
+    // Validate classes
+    try {
+      await classesValidation.validate(formData.classes);
+    } catch (err: any) {
+      newErrors.classes = err.message;
+    }
+
+    // Validate education qualification
+    try {
+      await educationQualificationValidation.validate(formData.education_qualification);
+    } catch (err: any) {
+      newErrors.education_qualification = err.message;
+    }
+
+    // Validate experience
+    try {
+      await experienceValidation.validate(Number(formData.experience));
+    } catch (err: any) {
+      newErrors.experience = err.message;
+    }
+
+    // Validate price
+    try {
+      await priceValidation.validate(Number(formData.price));
+    } catch (err: any) {
+      newErrors.price = err.message;
+    }
+
+    // Validate about
+    try {
+      await aboutValidation.validate(formData.about);
+    } catch (err: any) {
+      newErrors.about = err.message;
+    }
 
     setErrors(prev => ({ ...prev, ...newErrors }));
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!validateStep2()) {
-      Alert.alert('Validation', 'Please fix errors in step 2 before submitting');
-      return;
-    }
-
     setLoading(true);
     try {
       const payload = {
-        ...formData,
-        experience: Number(formData.experience || 0),
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirm_password,
+        mobile_number: formData.mobile_number,
+        street: formData.address.street,
+        city: formData.address.city,
+        state: formData.address.state,
+        pin_code: formData.address.pin_code,
+        country: formData.address.country,
+        subjects: formData.subjects,
+        board: formData.board,
+        classes: formData.classes,
+        education_qualification: formData.education_qualification,
+        certificates: '',
         price: Number(formData.price || 0),
+        experience: Number(formData.experience || 0),
+        image: formData.image, // Only send File object if available
         availabilities: formData.availabilities.map(slot => ({
           section: slot.section,
           start_time: slot.startTime,
           end_time: slot.endTime,
         })),
+        about: formData.about,
+        gender: formData.gender,
+        language: formData.language,
       };
 
-      const response = await registerTutor(payload);
+      // Validate entire form using schema
+      try {
+        await tutorRegistrationSchema.validate(payload, { abortEarly: false });
+      } catch (validationErr: any) {
+        const newErrors: Record<string, string> = {};
+        if (validationErr.inner && validationErr.inner.length > 0) {
+          validationErr.inner.forEach((err: any) => {
+            if (err.path) {
+              newErrors[err.path] = err.message;
+            }
+          });
+        }
+        setErrors(newErrors);
+        const errorMessages = Object.entries(newErrors)
+          .map(([field, message]) => `❌ ${message}`)
+          .join('\n');
+        Alert.alert(
+          '⚠️ Validation Errors',
+          `\n${errorMessages}\n\nPlease fix all errors before submitting.`,
+          [{ text: 'OK', onPress: () => { } }],
+        );
+        setLoading(false);
+        return;
+      }
+
+      const response = await registerTutor(payload as any);
       console.log('Tutor register response', response);
 
       Alert.alert('Success', 'Tutor registered successfully');
 
       setFormData({
-        username: '',
-        email: '',
-        mobile_number: '',
-        password: '',
-        confirm_password: '',
-        gender: '',
-        language: '',
-        image: '',
+        username: 'tutor',
+        email: 'tutor@gmail.com',
+        mobile_number: '9876543210',
+        password: '123456',
+        confirm_password: '123456',
+        gender: 'Male',
+        language: 'English',
+        image: null,
         subjects: [],
         classes: [],
         board: [],
         education_qualification: '',
-        experience: '',
-        price: '',
+        experience: '3',
+        price: '300',
         availabilities: [],
-        about: '',
+        about: 'Well experienced tutor',
         address: {
           street: '',
           city: '',
@@ -252,25 +385,38 @@ const TutorRegister: React.FC = () => {
       setStep(1);
     } catch (err: any) {
       console.log('Register tutor error', err?.response?.data || err);
-      Alert.alert(
-        'Error',
-        err?.response?.data?.message || err.message || 'Registration failed',
-      );
+      const errorData = err?.response?.data;
+      if (errorData && typeof errorData === 'object') {
+        const fieldErrors: Record<string, string> = {};
+        Object.entries(errorData).forEach(([field, val]) => {
+          const msg = Array.isArray(val) ? val.join(' ') : String(val);
+          fieldErrors[field] = msg;
+        });
+        const errorMessages = Object.entries(fieldErrors)
+          .map(([field, msg]) => `❌ ${msg}`)
+          .join('\n');
+        Alert.alert('Registration Error', `\n${errorMessages}`);
+      } else {
+        Alert.alert(
+          'Error',
+          err?.response?.data?.message || err.message || 'Registration failed',
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const goNextFromStep1 = () => {
-    if (!validateStep1()) {
+  const goNextFromStep1 = async () => {
+    if (!await validateStep1()) {
       Alert.alert('Validation', 'Please fix the errors in step 1');
       return;
     }
     setStep(2);
   };
 
-  const goNextFromStep2 = () => {
-    if (!validateStep2()) {
+  const goNextFromStep2 = async () => {
+    if (!await validateStep2()) {
       Alert.alert('Validation', 'Please fix the errors in step 2');
       return;
     }
@@ -399,11 +545,11 @@ const TutorRegister: React.FC = () => {
               >
                 {formData.image ? (
                   <View className="items-center">
-                    <Image
-                      source={{ uri: formData.image }}
-                      className="h-24 w-24 rounded-full"
-                    />
-                    <Text className="mt-2 text-sm text-blue-600">Tap to change</Text>
+                    <Text className="text-2xl">✓</Text>
+                    <Text className="mt-2 text-sm font-medium text-green-600">
+                      Image selected: {formData.image.name}
+                    </Text>
+                    <Text className="mt-1 text-xs text-blue-600">Tap to change</Text>
                   </View>
                 ) : (
                   <View className="items-center flex-row justify-center gap-2">

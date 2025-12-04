@@ -180,7 +180,7 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
                 className="px-3 py-2 bg-gray-50 active:bg-gray-100"
               >
                 <Text className="text-sm text-primary">
-                  Add "{search.trim()}"
+                  Add &quot{search.trim()}&quot
                 </Text>
               </Pressable>
             )}
