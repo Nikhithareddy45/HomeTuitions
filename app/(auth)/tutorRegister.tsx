@@ -47,9 +47,9 @@ const TutorRegister: React.FC = () => {
     username: 'tutor',
     email: 'tutor@gmail.com',
     mobile_number: '9876543210',
-    password: '123456',
-    confirm_password: '123456',
-    gender: 'Male',
+    password: '',
+    confirm_password: '',
+    gender: '',
     language: 'English',
     image: null as File | null,
 

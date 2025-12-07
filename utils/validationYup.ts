@@ -36,25 +36,17 @@ export const emailValidation = yup
 export const passwordValidation = yup
   .string()
   .required('Password is required')
-  .min(6, 'Password must be at least 8 characters')
+  .min(6, 'Password must be at least 6 characters')
 //   .matches(
 //     passwordRegex,
 //     'Password must contain uppercase, lowercase, number, and special character (@$!%*?&)'
 //   );
 
-/**
- * Confirm password validation
- * Must match password field
- */
 export const confirmPasswordValidation = yup
   .string()
   .required('Please confirm your password')
   .oneOf([yup.ref('password')], 'Passwords must match');
 
-/**
- * Mobile number validation
- * Indian phone number (10 digits, starts with 6-9)
- */
 export const mobileNumberValidation = yup
   .string()
   .required('Mobile number is required')
@@ -256,7 +248,7 @@ export const aboutValidation = yup
 export const genderValidation = yup
   .string()
   .required('Gender is required')
-  .oneOf(['Male', 'Female', 'Other'], 'Please select a valid gender');
+  .oneOf(['male', 'female', 'other'], 'Please select a valid gender');
 
 /**
  * Language validation
@@ -538,11 +530,6 @@ export const studentRegistrationSchema = yup.object().shape({
   }),
 });
 
-/**
- * Login Schema
- * Validates login credentials (LoginData)
- * Can use either username or email with password
- */
 export const loginSchema = yup.object().shape({
   username: yup
     .string()
@@ -554,10 +541,6 @@ export const loginSchema = yup.object().shape({
     .min(1, 'Password cannot be empty'),
 });
 
-/**
- * Tutor Registration Schema
- * Validates complete tutor registration data (TutorData)
- */
 export const tutorRegistrationSchema = yup.object().shape({
   username: usernameValidation,
   email: emailValidation,

@@ -1,5 +1,5 @@
-import { View, Text, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, Alert, KeyboardAvoidingView, ScrollView, Platform, Image } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { useFormReset } from '@/utils/useFormReset';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -7,16 +7,18 @@ import { loginSchema } from '@/utils/validationYup';
 import { LoginAPI } from '@/services/auth';
 import { Link, useRouter } from 'expo-router';
 import { useLocalSearchParams } from "expo-router";
+import { Images } from '@/constants/images';
+
 const Login: React.FC = () => {
 
   //studdent: test 123456
   //tutor : professor 123456
   const { role } = useLocalSearchParams();
   const router = useRouter();
-  const defaultEmail = (role==='student'?'test':'professor')
+  const defaultEmail = (role === 'student' ? 'test' : 'professor')
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: defaultEmail,
+    username: '',
     password: '123456'
 
   })
@@ -28,6 +30,12 @@ const Login: React.FC = () => {
     });
     setErrors({});
   }
+  useEffect(() => {
+    const defaultEmail = role === 'student' ? 'test' : 'professor';
+    setFormData(prev => ({ ...prev, username: defaultEmail }));
+  }, [role]);
+
+
   useFormReset(resetForm)
   const handleChange = (key: string, value: string) => {
     setFormData(prev => {
@@ -66,13 +74,18 @@ const Login: React.FC = () => {
       const response = await LoginAPI(payload)
       if (!response.ok) {
         Alert.alert(
-          'Success', 
+          'Success',
           'Registered successfully',
           [{ text: 'OK', onPress: () => { } }],
         );
       }
-      console.log(response.role)
-      console.log('Register success:', response);
+      console.log(response.user.role);
+
+      if (response.user.role === 'student') {
+        router.push('/(tabs)/student')
+      } else {
+        router.push('/(tabs)/tutor')
+      }
 
       // Reset state silently
       setFormData({
@@ -130,18 +143,16 @@ const Login: React.FC = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
-      className="w-full h-full  flex-1 "
+      className="flex-1  "
     >
-      <ScrollView
-        contentContainerStyle={{ padding: 24, paddingTop: 40 }}
-        scrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-        className="flex-1 w-[90%] mx-auto h-full "
-      >
-        <View className='flex-1 items-center justify-center '>
-          <View className='gap-3 p-6 w-full mx-auto border-2 rounded-xl shadow-md border-gray-300'>
+      <View className='flex-1 justify-center w-[90%] mx-auto '>
+        <View className='h-[45%] w-full items-center justify-center'>
+          <Image source={role === 'student' ? Images.LoginStudentImage : Images.LoginTutorImage} />
+        </View>
+        <View className='w-[90%] h-auto mx-auto rounded-xl'>
+          <View className='gap-3 p-6'>
             <Text className='text-primary text-3xl font-bold text-center mb-3 '>Login as {role} </Text>
-            <View className='w-[90%] mx-auto'>
+            <View className='w-full mx-auto'>
               <Input
                 label="Username"
                 iconName="User"
@@ -173,12 +184,12 @@ const Login: React.FC = () => {
           </View>
           <View className='flex-row items-center justify-center mt-4 gap-2'>
             <Text>Don&apos;t have an account?</Text>
-            <Link href={role==='student'? '/(auth)/studentRegister':'/(auth)/tutorRegister' }>
+            <Link href={role === 'student' ? '/(auth)/studentRegister' : '/(auth)/tutorRegister'}>
               <Text className='text-primary font-bold'>Sign Up</Text>
             </Link>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView >
   )
 }

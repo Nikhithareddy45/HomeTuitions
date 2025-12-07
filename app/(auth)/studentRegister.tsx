@@ -128,7 +128,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
       if (!response.ok) {
         Alert.alert(
           'Success',
-          'Student registered successfully',
+          `${response.message}`,
           [{ text: 'OK', onPress: () => { } }],
         );
       }
