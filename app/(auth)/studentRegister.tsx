@@ -1,9 +1,11 @@
 import AddressForm from '@/components/AddressComp';
+import { BackButton } from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import DOBPicker from '@/components/ui/DOBInput';
 import Input from '@/components/ui/Input';
 import { registerStudent } from '@/services/auth';
 import { useFormReset } from '@/utils/useFormReset';
+
 import {
   studentRegistrationSchema
 } from '@/utils/validationYup';
@@ -46,7 +48,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
     setFormData({
       username: 'nikhh',
       email: 'nikkireddyperugu@gmail.com',
-      mobile_number: '1234567890',
+      mobile_number: '9999999990',
       password: '123456',
       confirm_password: '123456',
       date_of_birth: '2000-01-01',
@@ -200,10 +202,12 @@ const StudentRegistrationSinglePage: React.FC = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
       className="flex-1 w-[90%] mx-auto"
     >
+      <BackButton/>
       <ScrollView
         contentContainerStyle={{ padding: 24, paddingTop: 40 }}
         scrollEnabled={true}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View className="items-center mb-8">
           <Text className="text-3xl font-bold text-primary text-center mb-2">
@@ -307,7 +311,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
               title="Next"
               onPress={goNext}
               icon="arrow-right"
-              className="mt-4"
+              className="mt-2"
             />
           </View>
         )}

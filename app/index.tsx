@@ -43,13 +43,13 @@ const Index: React.FC = () => {
       {/* CTA Buttons */}
       <View className="items-center gap-3">
         <Button
-          title="Find Tutor"
+          title="Student"
           onPress={() => handleLoginPress('student')}
           className="w-[90%]"
           icon="search"
         />
         <Button
-          title="Become Tutor"
+          title="Tutor"
           onPress={() => handleLoginPress('tutor')}
           outline={true}
           className="w-[90%]"

@@ -1,4 +1,5 @@
 import AddressForm from '@/components/AddressComp';
+import { BackButton } from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import GenericMultiSelect from '@/components/ui/GenericMultiSelect';
 import Input from '@/components/ui/Input';
@@ -431,9 +432,11 @@ const TutorRegister: React.FC = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
       className="flex-1 w-[90%] mx-auto"
     >
+      <BackButton/>
       <ScrollView
         contentContainerStyle={{ padding: 24, paddingTop: 40 }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View className="items-center mb-8">
           <Text className="text-3xl font-bold text-primary text-center mb-2">

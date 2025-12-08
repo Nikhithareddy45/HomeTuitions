@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ArrowLeftFromLine } from "lucide-react-native";
+import { CircleArrowLeft } from 'lucide-react-native';
 import {
     Text,
     TouchableOpacity
@@ -20,12 +20,10 @@ export const BackButton = () => {
     };
     return (
         <TouchableOpacity
-            className='w-10 h-10 rounded-full active:opacity-70 ml-2'
+            className='inline-block w-[8%] rounded-full active:opacity-70 ml-5 mt-7'
             onPress={handleBack}
         >
-            <Text className="text-lg font-5xl text-black py-1">
-                <ArrowLeftFromLine color='#ac1e24' strokeWidth={3}/>
-            </Text>
+            <CircleArrowLeft color='#115bca' strokeWidth={2} size={26} />
         </TouchableOpacity>
     );
 };

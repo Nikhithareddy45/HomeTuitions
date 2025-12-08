@@ -8,6 +8,7 @@ import { LoginAPI } from '@/services/auth';
 import { Link, useRouter } from 'expo-router';
 import { useLocalSearchParams } from "expo-router";
 import { Images } from '@/constants/images';
+import { BackButton } from '@/components/ui/BackButton';
 
 const Login: React.FC = () => {
 
@@ -143,15 +144,16 @@ const Login: React.FC = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
-      className="flex-1  "
+      className="flex-1 gap-5"
     >
-      <View className='flex-1 justify-center w-[90%] mx-auto '>
-        <View className='h-[45%] w-full items-center justify-center'>
+      <BackButton />
+      <View className='flex-1 gap-4 w-[90%] mx-auto relative'>
+        <View className='h-[40%] w-full items-center justify-center overflow-hidden'>
           <Image source={role === 'student' ? Images.LoginStudentImage : Images.LoginTutorImage} />
         </View>
-        <View className='w-[90%] h-auto mx-auto rounded-xl'>
-          <View className='gap-3 p-6'>
-            <Text className='text-primary text-3xl font-bold text-center mb-3 '>Login as {role} </Text>
+        <View className='w-[90%] flex-1 gap-6 h-auto mx-auto rounded-xl'>
+          <View className='p-6'>
+            <Text className='text-primary gap-4 text-3xl font-bold text-center mb-6 '>Login as {role} </Text>
             <View className='w-full mx-auto'>
               <Input
                 label="Username"
@@ -173,22 +175,29 @@ const Login: React.FC = () => {
                 error={errors.password}
               />
             </View>
-            <View>
+            <View className='gap-3 mt-2'>
               <Button
                 title="Login"
                 loading={loading}
                 onPress={handleSubmit}
                 icon="check"
               />
+              <View className='flex-row items-end justify-end'>
+                <Link href='/(auth)/forgot'>
+                  <Text className='text-primary font-bold'>Forgot Password?</Text>
+                </Link>
+              </View>
             </View>
           </View>
-          <View className='flex-row items-center justify-center mt-4 gap-2'>
-            <Text>Don&apos;t have an account?</Text>
-            <Link href={role === 'student' ? '/(auth)/studentRegister' : '/(auth)/tutorRegister'}>
-              <Text className='text-primary font-bold'>Sign Up</Text>
-            </Link>
-          </View>
+
         </View>
+      </View>
+      {/* .... */}
+      <View className='flex-row items-center justify-center gap-2 absolute bottom-0 w-full h-14 shadow-lg bg-white mx-auto'>
+        <Text>Don&apos;t have an account?</Text>
+        <Link href={role === 'student' ? '/(auth)/studentRegister' : '/(auth)/tutorRegister'}>
+          <Text className='text-primary font-bold'>Sign Up</Text>
+        </Link>
       </View>
     </KeyboardAvoidingView >
   )
