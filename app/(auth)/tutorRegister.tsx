@@ -61,7 +61,7 @@ const TutorRegister: React.FC = () => {
     education_qualification: '',
     experience: '3',
     price: '300',
-    availabilities: [] as { section: string; startTime: string; endTime: string }[],
+    availabilities: [] as { section: string; start_time: string; end_time: string }[],
     about: 'Well experienced tutor',
 
     address: {
@@ -78,7 +78,8 @@ const TutorRegister: React.FC = () => {
   const [classOptions, setClassOptions] = useState(class_options.map(o => o.label));
   const [boardOptions, setBoardOptions] = useState(board_options.map(o => o.label));
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-
+  const [eyeOpen, seteyeOpen] = useState(false)
+  const [image, setImage] = useState<string | null>(null);
   const resetForm = () => {
     setFormData({
       username: 'tutor',
@@ -95,7 +96,10 @@ const TutorRegister: React.FC = () => {
       education_qualification: '',
       experience: '3',
       price: '300',
-      availabilities: [],
+      availabilities: [
+        { section: "Morning", start_time: "09:00:00", end_time: "11:00:00" },
+        { section: "Evening", start_time: "16:00:00", end_time: "18:00:00" },
+      ],
       about: 'Well experienced tutor',
       address: {
         street: '',
@@ -117,50 +121,12 @@ const TutorRegister: React.FC = () => {
   };
 
   const pickImage = async () => {
-    Alert.alert(
-      'Add Profile Image',
-      'Choose an option',
-      [
-        {
-          text: 'Cancel',
-          onPress: () => { },
-          style: 'cancel',
-        },
-        {
-          text: 'Paste Image URL',
-          onPress: () => {
-            Alert.prompt(
-              'Image URL',
-              'Paste the full image URL',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Add',
-                  onPress: (url: string | undefined) => {
-                    if (url && url.trim()) {
-                      // For backend URLs, we'll just store it as null
-                      // The backend URL will be shown after successful registration
-                      setFormData(prev => ({
-                        ...prev,
-                        image: null, // Backend image URLs handled after registration
-                      }));
-                      Alert.alert('Note', 'Backend image URL will be displayed after registration');
-                    }
-                  },
-                },
-              ],
-              'plain-text',
-            );
-          },
-        },
-      ],
-    );
+    console.log("picker")
   };
-
   const addAvailability = () => {
     setFormData(prev => ({
       ...prev,
-      availabilities: [...prev.availabilities, { section: '', startTime: '', endTime: '' }],
+      availabilities: [...prev.availabilities, { section: '', start_time: '', end_time: '' }],
     }));
   };
 
@@ -318,8 +284,8 @@ const TutorRegister: React.FC = () => {
         image: formData.image, // Only send File object if available
         availabilities: formData.availabilities.map(slot => ({
           section: slot.section,
-          start_time: slot.startTime,
-          end_time: slot.endTime,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
         })),
         about: formData.about,
         gender: formData.gender,
@@ -432,9 +398,9 @@ const TutorRegister: React.FC = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
       className="flex-1 w-[90%] mx-auto"
     >
-      <BackButton/>
+      <BackButton />
       <ScrollView
-        contentContainerStyle={{ padding: 24, paddingTop: 40 }}
+        contentContainerStyle={{ padding: 24, paddingTop: 3 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -539,29 +505,19 @@ const TutorRegister: React.FC = () => {
 
             {/* Profile Image Picker */}
             <View className="w-[90%] mx-auto">
-              <Text className="mb-2 text-sm font-medium text-slate-700">
+              <Text className="mb-2 text-sm font-medium text-primary">
                 Profile Image
               </Text>
               <Pressable
                 onPress={pickImage}
                 className="w-full items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 py-8"
               >
-                {formData.image ? (
-                  <View className="items-center">
-                    <Text className="text-2xl">✓</Text>
-                    <Text className="mt-2 text-sm font-medium text-green-600">
-                      Image selected: {formData.image.name}
-                    </Text>
-                    <Text className="mt-1 text-xs text-blue-600">Tap to change</Text>
-                  </View>
-                ) : (
-                  <View className="items-center flex-row justify-center gap-2">
-                    <Text className="text-2xl">📷</Text>
-                    <Text className="mt-2 text-sm font-medium text-gray-600">
-                      Tap to pick image
-                    </Text>
-                  </View>
-                )}
+                <View className="items-center flex-row justify-center gap-2">
+                  <Text className="text-2xl">📷</Text>
+                  <Text className="mt-2 text-sm font-medium text-gray-600">
+                    Tap to pick image
+                  </Text>
+                </View>
               </Pressable>
             </View>
 
@@ -696,14 +652,14 @@ const TutorRegister: React.FC = () => {
                   <TimePicker
                     label="Start Time"
                     iconName="Clock"
-                    value={slot.startTime}
+                    value={slot.start_time}
                     onChange={time => updateAvailability(idx, 'startTime', time)}
                   />
 
                   <TimePicker
                     label="End Time"
                     iconName="Clock"
-                    value={slot.endTime}
+                    value={slot.end_time}
                     onChange={time => updateAvailability(idx, 'endTime', time)}
                   />
                 </View>

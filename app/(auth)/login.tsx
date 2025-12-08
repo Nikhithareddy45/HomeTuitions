@@ -76,7 +76,7 @@ const Login: React.FC = () => {
       if (!response.ok) {
         Alert.alert(
           'Success',
-          'Registered successfully',
+          'Login successfully',
           [{ text: 'OK', onPress: () => { } }],
         );
       }
@@ -146,8 +146,9 @@ const Login: React.FC = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
       className="flex-1 gap-5"
     >
-      <BackButton />
+
       <View className='flex-1 gap-4 w-[90%] mx-auto relative'>
+      <BackButton />
         <View className='h-[40%] w-full items-center justify-center overflow-hidden'>
           <Image source={role === 'student' ? Images.LoginStudentImage : Images.LoginTutorImage} />
         </View>

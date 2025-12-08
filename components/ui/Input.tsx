@@ -1,7 +1,7 @@
+import React, { useState } from 'react';
+import { Pressable, Text, TextInput, TextInputProps, View } from 'react-native';
 import Icon from '@/components/ui/IconComp';
 import { LucideIconName } from '@/types/common';
-import React from 'react';
-import { Text, TextInput, TextInputProps, View } from 'react-native';
 import { triggerDropdownClose } from '../../utils/useCloseDropdownOnInputFocus';
 
 interface InputProps extends Omit<TextInputProps, 'onChange'> {
@@ -21,19 +21,19 @@ const Input: React.FC<InputProps> = ({
   iconColor = '#115bca',
   className = '',
   onChangeText,
+  secureTextEntry,          // from props
   ...rest
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = !!secureTextEntry;
+
   return (
     <View className={`mb-4 gap-2 ${className}`}>
-      {/* Label + Icon */}
+      {/* Label + left icon */}
       <View className="flex-row items-center mb-1">
         {iconName && (
           <View className="mr-3">
-            <Icon
-              name={iconName}
-              size={18}
-              color={iconColor}
-            />
+            <Icon name={iconName} size={18} color={iconColor} />
           </View>
         )}
         <Text className="text-md font-semibold text-primary">
@@ -41,27 +41,37 @@ const Input: React.FC<InputProps> = ({
         </Text>
       </View>
 
-      {/* Input field */}
-      <TextInput
-        className={` rounded-lg px-4 py-3 border-2 border-gray-100
-          ${error ? 'border-danger' : ''}
-        `}
-        placeholder={placeholder}
-        placeholderTextColor="#9ca3af"
-        onChangeText={onChangeText}
-        onFocus={() => triggerDropdownClose()}
-        {...rest}
-      />
+      {/* Input row with optional eye icon */}
+      <View className="flex-row items-center rounded-lg border-2 border-gray-100 px-4">
+        <TextInput
+          className={`flex-1 py-3 ${error ? 'border-danger' : ''}`}
+          placeholder={placeholder}
+          placeholderTextColor="#9ca3af"
+          onChangeText={onChangeText}
+          onFocus={() => triggerDropdownClose()}
+          secureTextEntry={isPassword && !showPassword}
+          {...rest}
+        />
 
-      {/* Error message */}
-      {error && (
-        <View className="flex-row items-center">
-          <View className="mr-1">
+        {isPassword && (
+          <Pressable
+            onPress={() => setShowPassword(prev => !prev)}
+            hitSlop={8}
+          >
             <Icon
-              name="AlertCircle"
-              size={12}
-              color="#ef4444"
+              name={showPassword ? 'EyeOff' : 'Eye'}
+              size={18}
+              color="#6b7280"
             />
+          </Pressable>
+        )}
+      </View>
+
+      {/* Error */}
+      {error && (
+        <View className="flex-row items-center mt-1">
+          <View className="mr-1">
+            <Icon name="AlertCircle" size={12} color="#ef4444" />
           </View>
           <Text className="text-xs text-danger">{error}</Text>
         </View>

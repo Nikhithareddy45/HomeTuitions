@@ -20,7 +20,7 @@ export const BackButton = () => {
     };
     return (
         <TouchableOpacity
-            className='inline-block w-[8%] rounded-full active:opacity-70 ml-5 mt-7'
+            className='inline-block w-[8%] rounded-full active:opacity-70 ml-1 mb-3 mt-7'
             onPress={handleBack}
         >
             <CircleArrowLeft color='#115bca' strokeWidth={2} size={26} />

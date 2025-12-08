@@ -204,7 +204,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
     >
       <BackButton/>
       <ScrollView
-        contentContainerStyle={{ padding: 24, paddingTop: 40 }}
+        contentContainerStyle={{ padding: 24, paddingTop: 2}}
         scrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
