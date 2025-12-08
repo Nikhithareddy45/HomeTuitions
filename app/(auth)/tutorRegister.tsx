@@ -9,39 +9,16 @@ import TimePicker from '@/components/ui/TimePicker';
 import { board_options, class_options, gender_options, section_options, subject_options } from '@/constants/constants';
 import { registerTutor } from '@/services/auth';
 import { useFormReset } from '@/utils/useFormReset';
-import {
-  aboutValidation,
-  boardValidation,
-  classesValidation,
-  confirmPasswordValidation,
-  educationQualificationValidation,
-  emailValidation,
-  experienceValidation,
-  genderValidation,
-  languageValidation,
-  mobileNumberValidation,
-  passwordValidation,
-  priceValidation,
-  subjectsValidation,
-  tutorRegistrationSchema,
-  usernameValidation
-} from '@/utils/validationYup';
+import { tutorRegistrationSchema } from '@/utils/validationYup';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 import React, { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View
-} from 'react-native';
-
+import {Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from 'react-native'; 
 const TutorRegister: React.FC = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState({
@@ -79,6 +56,7 @@ const TutorRegister: React.FC = () => {
   const [boardOptions, setBoardOptions] = useState(board_options.map(o => o.label));
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string>('');
   const resetForm = () => {
     setFormData({
       username: 'tutor',
@@ -97,7 +75,6 @@ const TutorRegister: React.FC = () => {
       price: '300',
       availabilities: [
         { section: "Morning", start_time: "09:00:00", end_time: "11:00:00" },
-        { section: "Evening", start_time: "16:00:00", end_time: "18:00:00" },
       ],
       about: 'Well experienced tutor',
       address: {
@@ -120,8 +97,39 @@ const TutorRegister: React.FC = () => {
   };
 
   const pickImage = async () => {
-    console.log("picker")
-   };
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        setImageError('Permission to access media library is required!');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedImage = result.assets[0];
+        setImage(selectedImage.uri)
+        setImageUri(selectedImage.uri)
+
+        // Basic file size check (5MB)
+        if (selectedImage.fileSize && selectedImage.fileSize > 5 * 1024 * 1024) {
+          setImageError('Image size should be less than 5MB');
+          return;
+        }
+        console.log(setImage)
+        setImageError('');
+        setFormData(prev => ({ ...prev, profile_image: selectedImage }));
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      setImageError('Failed to pick image. Please try again.');
+    }
+  };
+
   const addAvailability = () => {
     setFormData(prev => ({
       ...prev,
@@ -129,7 +137,7 @@ const TutorRegister: React.FC = () => {
     }));
   };
 
-  const updateAvailability = (index: number, key: 'section' | 'startTime' | 'endTime', value: string) => {
+  const updateAvailability = (index: number, key: 'section' | 'start_time' | 'end_time', value: string) => {
     setFormData(prev => {
       const arr = [...prev.availabilities];
       arr[index] = { ...arr[index], [key]: value };
@@ -386,15 +394,21 @@ const TutorRegister: React.FC = () => {
               <Text className="mb-2 text-sm font-medium text-primary">
                 Profile Image
               </Text>
-              <Pressable
-                onPress={pickImage}
-                className="w-full items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 py-8"
-              >
-                <View className="items-center flex-row justify-center gap-2">
-                  <Text className="text-2xl">📷</Text>
-                  <Text className="mt-2 text-sm font-medium text-gray-600">
-                    Tap to pick image
-                  </Text>
+              <Pressable onPress={pickImage}>
+                <View className="items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 py-8">
+                  {imageUri ? (
+                    <Image
+                      source={{ uri: imageUri }}
+                      style={{ width: 100, height: 100, borderRadius: 50 }}
+                    />
+                  ) : (
+                    <>
+                      <Text style={{ fontSize: 24 }}>📷</Text>
+                      <Text className="mt-2 text-sm font-medium text-gray-600">
+                        Tap to pick image
+                      </Text>
+                    </>
+                  )}
                 </View>
               </Pressable>
             </View>
@@ -531,15 +545,16 @@ const TutorRegister: React.FC = () => {
                     label="Start Time"
                     iconName="Clock"
                     value={slot.start_time}
-                    onChange={time => updateAvailability(idx, 'startTime', time)}
+                    onChange={time => updateAvailability(idx, 'start_time', time)}
                   />
 
                   <TimePicker
                     label="End Time"
                     iconName="Clock"
                     value={slot.end_time}
-                    onChange={time => updateAvailability(idx, 'endTime', time)}
+                    onChange={time => updateAvailability(idx, 'end_time', time)}
                   />
+
                 </View>
               ))}
               <Button

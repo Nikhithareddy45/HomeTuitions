@@ -171,8 +171,7 @@ export const classesValidation = yup
 export const educationQualificationValidation = yup
   .string()
   .required('Education qualification is required')
-  .min(10, 'Qualification must be at least 10 characters')
-  .max(200, 'Qualification must not exceed 200 characters')
+  .min(1, 'Qualification must be at least 1 characters')
   .trim();
 
 /**
@@ -278,7 +277,6 @@ export const dayValidation = yup
 export const timeValidation = yup
   .string()
   .required('Time is required')
-  .matches(timeRegex, 'Time must be in HH:MM format (00:00 - 23:59)');
 
 /**
  * Start time validation with end time comparison
@@ -286,7 +284,6 @@ export const timeValidation = yup
 export const startTimeValidation = yup
   .string()
   .required('Start time is required')
-  .matches(timeRegex, 'Start time must be in HH:MM format');
 
 /**
  * End time validation

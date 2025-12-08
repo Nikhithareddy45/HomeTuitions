@@ -90,8 +90,8 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
   };
 
   return (
-    <View ref={containerRef} className="w-full relative">
-      <View className='flex-row items-center gap-3 mb-2'>
+    <View ref={containerRef} className="w-full relative mb-2">
+      <View className='flex-row items-center gap-3 mb-4'>
         {iconName && <Icon name={iconName} size={18} />}
         {label && <Text className="text-md font-bold text-primary">{label}</Text>}
       </View>
