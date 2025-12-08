@@ -78,7 +78,6 @@ const TutorRegister: React.FC = () => {
   const [classOptions, setClassOptions] = useState(class_options.map(o => o.label));
   const [boardOptions, setBoardOptions] = useState(board_options.map(o => o.label));
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [eyeOpen, seteyeOpen] = useState(false)
   const [image, setImage] = useState<string | null>(null);
   const resetForm = () => {
     setFormData({
@@ -122,7 +121,7 @@ const TutorRegister: React.FC = () => {
 
   const pickImage = async () => {
     console.log("picker")
-  };
+   };
   const addAvailability = () => {
     setFormData(prev => ({
       ...prev,
@@ -146,119 +145,6 @@ const TutorRegister: React.FC = () => {
     });
   };
 
-  const validateStep1 = async (): Promise<boolean> => {
-    const newErrors: Record<string, string> = {};
-
-    // Validate username
-    try {
-      await usernameValidation.validate(formData.username);
-    } catch (err: any) {
-      newErrors.username = err.message;
-    }
-
-    // Validate email
-    try {
-      await emailValidation.validate(formData.email);
-    } catch (err: any) {
-      newErrors.email = err.message;
-    }
-
-    // Validate mobile number
-    try {
-      await mobileNumberValidation.validate(formData.mobile_number);
-    } catch (err: any) {
-      newErrors.mobile_number = err.message;
-    }
-
-    // Validate password
-    try {
-      await passwordValidation.validate(formData.password);
-    } catch (err: any) {
-      newErrors.password = err.message;
-    }
-
-    // Validate confirm password
-    try {
-      await confirmPasswordValidation.validate(formData.confirm_password, {
-        context: { password: formData.password },
-      });
-    } catch (err: any) {
-      newErrors.confirm_password = err.message;
-    }
-
-    // Validate gender
-    try {
-      await genderValidation.validate(formData.gender);
-    } catch (err: any) {
-      newErrors.gender = err.message;
-    }
-
-    // Validate language
-    try {
-      await languageValidation.validate(formData.language);
-    } catch (err: any) {
-      newErrors.language = err.message;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateStep2 = async (): Promise<boolean> => {
-    const newErrors: Record<string, string> = {};
-
-    // Validate subjects
-    try {
-      await subjectsValidation.validate(formData.subjects);
-    } catch (err: any) {
-      newErrors.subjects = err.message;
-    }
-
-    // Validate board
-    try {
-      await boardValidation.validate(formData.board);
-    } catch (err: any) {
-      newErrors.board = err.message;
-    }
-
-    // Validate classes
-    try {
-      await classesValidation.validate(formData.classes);
-    } catch (err: any) {
-      newErrors.classes = err.message;
-    }
-
-    // Validate education qualification
-    try {
-      await educationQualificationValidation.validate(formData.education_qualification);
-    } catch (err: any) {
-      newErrors.education_qualification = err.message;
-    }
-
-    // Validate experience
-    try {
-      await experienceValidation.validate(Number(formData.experience));
-    } catch (err: any) {
-      newErrors.experience = err.message;
-    }
-
-    // Validate price
-    try {
-      await priceValidation.validate(Number(formData.price));
-    } catch (err: any) {
-      newErrors.price = err.message;
-    }
-
-    // Validate about
-    try {
-      await aboutValidation.validate(formData.about);
-    } catch (err: any) {
-      newErrors.about = err.message;
-    }
-
-    setErrors(prev => ({ ...prev, ...newErrors }));
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -375,18 +261,10 @@ const TutorRegister: React.FC = () => {
   };
 
   const goNextFromStep1 = async () => {
-    if (!await validateStep1()) {
-      Alert.alert('Validation', 'Please fix the errors in step 1');
-      return;
-    }
     setStep(2);
   };
 
   const goNextFromStep2 = async () => {
-    if (!await validateStep2()) {
-      Alert.alert('Validation', 'Please fix the errors in step 2');
-      return;
-    }
     setStep(3);
   };
 
