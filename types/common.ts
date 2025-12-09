@@ -41,3 +41,17 @@ export interface GenericMultiSelectProps {
   onChange: (values: string[]) => void;
   onOptionsChange?: (values: string[]) => void; // when user adds new option
 }
+
+export interface AvailabilityWindow {
+  section: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface Address {
+  street?: string;
+  city?: string;
+  state?: string;
+  pin_code?: string;
+  country?: string;
+}

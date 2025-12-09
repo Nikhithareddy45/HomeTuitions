@@ -1,4 +1,4 @@
-
+import { Address,AvailabilityWindow } from "./common";
 export interface UserData {
   username: string;
   email: string;
@@ -39,16 +39,3 @@ export interface TutorData {
   language: string;
 }
 
-export interface AvailabilityWindow {
-  section: string;
-  start_time: string;
-  end_time: string;
-}
-
-export interface Address {
-  street?: string;
-  city?: string;
-  state?: string;
-  pin_code?: string;
-  country?: string;
-}

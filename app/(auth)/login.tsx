@@ -19,15 +19,15 @@ const Login: React.FC = () => {
   const defaultEmail = (role === 'student' ? 'test' : 'professor')
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
+    username: defaultEmail,
     password: '123456'
 
   })
   const [errors, setErrors] = useState<Record<string, string>>({});
   const resetForm = () => {
     setFormData({
-      username: '',
-      password: ''
+      username: defaultEmail,
+      password: '123456'
     });
     setErrors({});
   }
