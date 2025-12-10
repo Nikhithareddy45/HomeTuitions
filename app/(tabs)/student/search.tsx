@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import SearchBar from '@/components/ui/Search';
 import TutorCard from '@/components/user/TutorCard';
 import { GetAllTutorData } from '@/types/tutor';
-import { getAllTutorsAPI } from '@/services/auth';
+import { getAllTutorsAPI } from '@/services/tutor';
 import { FunnelPlus } from 'lucide-react-native';
 
 const search = () => {

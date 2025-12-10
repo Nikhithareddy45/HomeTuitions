@@ -74,11 +74,11 @@ const TutorCard = ({ tutor }: { tutor: GetAllTutorData }) => {
                 </Text>
             </View>
 
-            <View className="flex-row justify-between mt-1 gap-3 w-full overflow-hidden">
+            <View className="flex-row justify-center mt-1 w-full overflow-hidden">
                 <Button
                     onPress={() => router.push('/')}
                     title="Book Demo"
-                    className="bg-primary w-[44%]"
+                    className="bg-primary w-[43%]"
                 />
                 <Button
                     outline
@@ -89,7 +89,7 @@ const TutorCard = ({ tutor }: { tutor: GetAllTutorData }) => {
                         })
                     }
                     title="See Profile"
-                    className="border border-primary w-[44%]"
+                    className="border border-primary w-[43%]"
                 />
             </View>
         </View>

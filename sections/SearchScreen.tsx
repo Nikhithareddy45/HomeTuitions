@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const FilterContent = () => {
+const SearchScreen = () => {
   return (
     <View>
-      <Text>FilterContent</Text>
+      <Text>SearchScreen</Text>
     </View>
   )
 }
 
-export default FilterContent
+export default SearchScreen
