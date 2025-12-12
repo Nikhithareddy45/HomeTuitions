@@ -4,19 +4,19 @@ import Button from '@/components/ui/Button';
 import DOBPicker from '@/components/ui/DOBInput';
 import Input from '@/components/ui/Input';
 import { registerStudent } from '@/services/auth';
+import { useRefreshStore } from '@/store/useRefreshStore';
 import { useFormReset } from '@/utils/useFormReset';
-
 import {
-  studentRegistrationSchema
+    studentRegistrationSchema
 } from '@/utils/validationYup';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    View,
 } from 'react-native';
 
 
@@ -25,9 +25,11 @@ const StudentRegistrationSinglePage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
+  const refreshToken = useRefreshStore((state: any) => state.refreshToken);
+  
   const [formData, setFormData] = useState({
-    username: 'nikhh',
-    email: 'nikkireddyperugu@gmail.com',
+    username: '',
+    email: '',
     mobile_number: '1234567890',
     password: '123456',
     confirm_password: '123456',
@@ -67,6 +69,10 @@ const StudentRegistrationSinglePage: React.FC = () => {
   };
 
   useFormReset(resetForm);
+
+  useEffect(() => {
+    resetForm();
+  }, [refreshToken]);;
 
   const handleChange = (key: string, value: string) => {
     setFormData(prev => {
@@ -272,7 +278,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
               label="Date of Birth"
               icon="Calendar"
               value={formData.date_of_birth}
-              onChange={async (text) => {
+              onChange={text => {
                 handleChange('date_of_birth', text);
               }}
               error={errors.date_of_birth}
@@ -311,7 +317,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
               title="Next"
               onPress={goNext}
               icon="arrow-right"
-              className="mt-2"
+              className='w-[45%]'
             />
           </View>
         )}
@@ -332,6 +338,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
                   outline
                   onPress={goPrev}
                   icon="arrow-left"
+                  className='w-[90%]'
                 />
               </View>
               <View className="flex-1 ml-3">
@@ -340,6 +347,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
                   loading={loading}
                   onPress={handleSubmit}
                   icon="check"
+                  className='w-[90%]'
                 />
               </View>
             </View>

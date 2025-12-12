@@ -1,13 +1,13 @@
-type AvailabilitySection = 'Morning' | 'Afternoon' | 'Evening' | 'Night';
-
+export type AvailabilitySection = 'Morning' | 'Afternoon' | 'Evening' | 'Night';
 export type Filters = {
-  gender: 'male' | 'female' | 'other' | null;       // radio
-  teachingLanguages: string[];                      // multi-select
-  minRating: number | null;                         // slider / stars
-  maxPrice: number | null;                          // slider / input
-  boards: string[];                                 // checkboxes
-  classes: string[];                                // checkboxes
-  educationLevels: string[];                        // checkboxes
-  minExperience: number | null;                     // slider / input
-  availability: AvailabilitySection[];              // checkboxes
+  gender: 'male' | 'female' | 'other' | null;
+  teachingLanguages: string[];
+  minRating: number | null;
+  maxPrice: number | null;
+  boards: string[];
+  classes: string[];
+  educationLevels: string[];
+  minExperience: number | null;
+  availability: AvailabilitySection[];
+  location: string; // street,city,state,pincode,country from backend
 };

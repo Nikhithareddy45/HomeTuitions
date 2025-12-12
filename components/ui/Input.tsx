@@ -42,7 +42,7 @@ const Input: React.FC<InputProps> = ({
       </View>
 
       {/* Input row with optional eye icon */}
-      <View className="flex-row items-center rounded-lg border-2 border-gray-100 px-4">
+      <View className="flex-row items-center rounded-xl border-2 border-gray-100 px-4">
         <TextInput
           className={`flex-1 py-3 ${error ? 'border-danger' : ''}`}
           placeholder={placeholder}

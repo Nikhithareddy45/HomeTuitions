@@ -20,7 +20,7 @@ interface UpdatedMultiSelectProps extends GenericMultiSelectProps {
 }
 
 const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
-  iconName = 'AArrowDown',
+  iconName = 'Asterisk',
   label = 'Select',
   placeholder = 'Select options',
   maxSelected,
@@ -90,7 +90,7 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
   };
 
   return (
-    <View ref={containerRef} className="w-full relative mb-2">
+    <View ref={containerRef} className="w-full relative mb-2 ">
       <View className='flex-row items-center gap-3 mb-4'>
         {iconName && <Icon name={iconName} size={18} />}
         {label && <Text className="text-md font-bold text-primary">{label}</Text>}
@@ -100,7 +100,7 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={toggleOpen}
-        className="w-full px-3 py-3 rounded-2xl border border-gray-300 bg-white flex-row items-center justify-between"
+        className="w-full px-3 py-3  bg-white flex-row items-center justify-between"
       >
         <Text
           className={`text-md ${value.length ? 'text-slate-900' : 'text-gray-400'}`}
@@ -121,7 +121,7 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
             className="absolute inset-0 z-10"
           />
 
-          <View className="absolute z-20 top-full left-0 right-0 mt-1 rounded-2xl border border-gray-200 bg-white shadow-lg max-h-72 overflow-hidden">
+          <View className="absolute z-20 top-full left-0 right-0 bg-white-900 overflow-scroll">
 
             {/* Search / add input */}
             <View className="border-b border-gray-200 p-2">

@@ -19,10 +19,13 @@ module.exports = {
       },
       colors: {  // ✅ Move colors here, not in extend.color
         primary: "#115bca",
-        accent:"#2096daff",
+        accent:"#115bcaa6",
         secondary: "#f9f9f9",
         text: "#1e1e1e",
-        white: "#ffffffd3",
+        white:{
+          100:"#ffffffd3",
+          900:'#ffffff'
+        },
         black:{
           100: "#111111",
           700: "#222222",

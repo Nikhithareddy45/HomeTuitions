@@ -8,18 +8,20 @@ import Textarea from '@/components/ui/Textarea';
 import TimePicker from '@/components/ui/TimePicker';
 import { board_options, class_options, gender_options, section_options, subject_options } from '@/constants/constants';
 import { registerTutor } from '@/services/auth';
+import { useRefreshStore } from '@/store/useRefreshStore';
 import { useFormReset } from '@/utils/useFormReset';
 import { tutorRegistrationSchema } from '@/utils/validationYup';
-import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import React, { useState } from 'react';
-import {Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View} from 'react-native'; 
+import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 const TutorRegister: React.FC = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const refreshToken = useRefreshStore((state: any) => state.refreshToken);
 
   const [formData, setFormData] = useState({
     username: 'tutor',
@@ -91,6 +93,10 @@ const TutorRegister: React.FC = () => {
   };
 
   useFormReset(resetForm);
+
+  useEffect(() => {
+    resetForm();
+  }, [refreshToken]);
 
   const handleChange = (key: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
