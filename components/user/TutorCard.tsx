@@ -76,7 +76,7 @@ const TutorCard = ({ tutor }: { tutor: GetAllTutorData }) => {
 
             <View className="flex-row justify-center mt-1 w-full overflow-hidden">
                 <Button
-                    onPress={() => router.push('/')}
+                    onPress={() => router.push('/sections/BookDemo')}
                     title="Book Demo"
                     className="bg-primary w-[43%]"
                 />

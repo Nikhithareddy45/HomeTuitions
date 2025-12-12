@@ -8,6 +8,9 @@ import { useFormReset } from '@/utils/useFormReset';
 import { loginSchema } from '@/utils/validationYup';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setUserCache } from "@/utils/getUserFromStorage";
+import { queryClient } from "@/utils/reactQueryClient"; // You must create this
 import {
   Alert,
   Image,
@@ -43,6 +46,7 @@ const Login: React.FC = () => {
     });
     setErrors({});
   };
+
 
   useEffect(() => {
     const defaultEmail = role === 'student' ? 'test' : 'professor';
@@ -90,13 +94,20 @@ const Login: React.FC = () => {
         return;
       }
 
-      // API
       const response = await LoginAPI(payload);
+      console.log(response)
 
       if (!response.ok) {
         Alert.alert('Success', 'Login successfully');
       }
+      await AsyncStorage.setItem("token", response.tokens.access);
+      await AsyncStorage.setItem("refresh", response.tokens.refresh);
+      await AsyncStorage.setItem("user", JSON.stringify(response.user));
+      setUserCache(response.user, queryClient);
 
+      setErrors({});
+
+      // Navigate user
       if (response.user.role === 'student') {
         router.push('/(tabs)/student');
       } else {

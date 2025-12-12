@@ -20,6 +20,7 @@ const Input: React.FC<InputProps> = ({
   iconName,
   iconColor = '#115bca',
   className = '',
+  editable = true,
   onChangeText,
   secureTextEntry,          // from props
   ...rest
@@ -42,7 +43,10 @@ const Input: React.FC<InputProps> = ({
       </View>
 
       {/* Input row with optional eye icon */}
-      <View className="flex-row items-center rounded-xl border-2 border-gray-100 px-4">
+      <View
+        className={`flex-row items-center rounded-xl border-2 px-4 ${editable ? 'border-gray-100' : 'border-gray-200 bg-gray-50'
+          }`}
+      >
         <TextInput
           className={`flex-1 py-3 ${error ? 'border-danger' : ''}`}
           placeholder={placeholder}

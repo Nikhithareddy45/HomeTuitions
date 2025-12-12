@@ -87,7 +87,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
           onPress={() => setShowModal(false)}
           className="flex-1 bg-black/50 items-center justify-center"
         >
-          <View className="bg-white rounded-2xl p-6 w-80">
+          <View className="bg-white-900 rounded-2xl p-6 w-80">
             <Text className="text-lg font-bold text-center mb-6">Select Time</Text>
 
             {/* Time Input Section */}
