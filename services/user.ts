@@ -17,6 +17,8 @@ export const GetProfileAPI = async (userId: string): Promise<any> => {
 
 export const UpdateStudentAPI = async (userData: any, userId: string): Promise<any> => {
   const token = await getTokenFromStorage();
+  
+  if (!token) throw new Error("No token found");
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -24,7 +26,9 @@ export const UpdateStudentAPI = async (userData: any, userId: string): Promise<a
     },
     withCredentials: true,
   };
+  console.log(config)
 
   const response = await axios.patch(`${base_url}/api/users/v1/users/${userId}/`, userData, config);
+  console.log(response.data)
   return response.data;
 };

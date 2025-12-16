@@ -11,7 +11,7 @@ import axios from "axios";
 import { base_url } from "../utils/url";
 export const BookDemoAPI = async ({ tutorId, message, demoDate, demoTime }: BookDemoData): Promise<any> => {
   try {
-    const token = getTokenFromStorage();
+    const token = await getTokenFromStorage();
 
     const config = {
       headers: {
@@ -34,7 +34,7 @@ export const BookDemoAPI = async ({ tutorId, message, demoDate, demoTime }: Book
 
 export const ApplicationsAPI = async (ApplicationData: any,tutorId: string): Promise<any> => {
   try {
-    const token = getTokenFromStorage(); 
+    const token = await getTokenFromStorage(); 
     const config = {
       headers: {
         Authorization: `Bearer ${token}`,

@@ -6,7 +6,7 @@ import Input from '@/components/ui/Input';
 import TimePicker from '@/components/ui/TimePicker';
 import { BookDemoAPI } from '@/services/booking';
 import React, { useEffect, useState } from 'react';
-
+import { useLocalSearchParams } from 'expo-router';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -17,10 +17,19 @@ import {
 } from 'react-native';
 
 const BookDemo: React.FC = () => {
+  const { tutorId } = useLocalSearchParams<{ tutorId?: string }>();
+  if (!tutorId) {
+    Alert.alert(
+      'Error',
+      'Tutor ID is missing. Please navigate from a valid tutor profile.',
+      [{ text: 'OK', onPress: () => { } }],
+    );
+    return null;
+  }
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     username: '',
-    tutorId: '',
+    tutorId: tutorId,
     email: '',
     mobile_number: '',
     address: {
@@ -41,7 +50,9 @@ const BookDemo: React.FC = () => {
       return updated;
     });
   };
-
+    console.log(tutorId)
+  console.log(formData.tutorId);
+  
   const handleSubmit = async () => {
     try {
       console.log(formData)

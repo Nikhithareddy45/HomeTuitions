@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, RefreshControl, Pressable, Alert, SafeAreaView, Platform, KeyboardAvoidingView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Eye, EyeOff, User, Mail, Phone, MapPin, Camera, LogOut, X, Check, Pencil } from 'lucide-react-native';
+import { LogOut, Pencil, X } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
-import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import { GetProfileAPI, UpdateStudentAPI } from '@/services/user';
 import { getCurrentUser, setUserCache } from '@/utils/getUserFromStorage';
-import { queryClient } from '@/utils/reactQueryClient';
 
 interface Address {
   street: string;
@@ -26,6 +25,8 @@ interface UserData {
   email: string;
   mobile_number: string;
   role: string;
+  date_of_birth?: string;
+  student_class?: string;
   profile_image?: string;
   address?: Address;
 }
@@ -43,12 +44,14 @@ const UserProfile: React.FC = () => {
     setLoading(true);
     try {
       const currentUser = await getCurrentUser();
+      console.log("currentUser",currentUser)
       if (!currentUser) {
         Alert.alert('Error', 'User not found, please login again.');
         return;
       }
 
       const data = await GetProfileAPI(currentUser.id.toString());
+      console.log("data",data)
       setUserData(data);
       setEditedData(data);
       setImageUri(data.profile_image || null);
@@ -90,12 +93,18 @@ const UserProfile: React.FC = () => {
   const handleSave = async () => {
     if (!editedData) return;
     try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser?.id) {
+        Alert.alert('Error', 'User not found, please login again.');
+        return;
+      }
        const payload = {
+        userid:currentUser.id,
         username: editedData.username,
         email: editedData.email,
         mobile_number: editedData.mobile_number,
-        // date_of_birth: editedData.date_of_birth,
-        // student_class: editedData.student_class,
+        date_of_birth: editedData.date_of_birth,
+        student_class: editedData.student_class,
         // password: editedData.password,
         // confirm_password: formData.confirm_password,
         address: {
@@ -107,16 +116,18 @@ const UserProfile: React.FC = () => {
         },
       };
       setLoading(true);
-      const updatedUser = await UpdateStudentAPI(payload, editedData.id.toString());
+      console.log(payload)
+      const updatedUser = await UpdateStudentAPI(payload, String(currentUser.id));
       console.log(updatedUser)
       setUserData(updatedUser);
       setEditedData(updatedUser);
+      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
       setUserCache(updatedUser);
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (error: any) {
-      console.error('Save error:', error);
-      Alert.alert('Error', error?.message || 'Failed to update profile');
+      console.error('Save error:', error?.response?.data || error);
+      Alert.alert('Error', error?.response?.data?.message || JSON.stringify(error?.response?.data) || error?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
