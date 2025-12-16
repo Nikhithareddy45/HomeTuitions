@@ -101,7 +101,6 @@ const UserProfile: React.FC = () => {
        const payload = {
         userid:currentUser.id,
         username: editedData.username,
-        email: editedData.email,
         mobile_number: editedData.mobile_number,
         date_of_birth: editedData.date_of_birth,
         student_class: editedData.student_class,
