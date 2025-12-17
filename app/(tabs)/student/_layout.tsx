@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { House, Search, User, Calendar, Bell } from 'lucide-react-native';
+import { House, Search, User, Calendar, Bell,SquareArrowOutUpRight } from 'lucide-react-native';
 
 export default function UserLayout() {
   const INACTIVE_COLOR = '#313131';
@@ -44,10 +44,10 @@ export default function UserLayout() {
         }}
       />
       <Tabs.Screen
-        name="alerts"
+        name="enquiry"
         options={{
-          title: 'Alerts',
-          tabBarIcon: ({color}) => <Bell color={color} size={iconSize} />,
+          title: 'Enquiry',
+          tabBarIcon: ({color}) => <SquareArrowOutUpRight color={color} size={iconSize} />,
         }}
       />
       <Tabs.Screen

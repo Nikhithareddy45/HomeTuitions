@@ -1,4 +1,4 @@
-import { Address,AvailabilityWindow } from "./common";
+import { Address, AvailabilityWindow } from "./common";
 
 export interface TutorUser {
   id: number;

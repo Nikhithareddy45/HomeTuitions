@@ -1,5 +1,6 @@
-import axios from 'axios'
 import { base_url } from '@/utils/url';
+import axios from 'axios';
+
 export const getTutorByIdAPI = async (tutorId: string): Promise<any> => {
   try {
     const response = await axios.get(`${base_url}/api/tutors/v1/tutors/${tutorId}/`, {

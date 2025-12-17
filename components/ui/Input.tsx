@@ -29,7 +29,7 @@ const Input: React.FC<InputProps> = ({
   const isPassword = !!secureTextEntry;
 
   return (
-    <View className={`mb-4 gap-2 ${className}`}>
+    <View className={`mb-4 gap-2 ${className} ` }>
       {/* Label + left icon */}
       <View className="flex-row items-center mb-1">
         {iconName && (
@@ -44,7 +44,7 @@ const Input: React.FC<InputProps> = ({
 
       {/* Input row with optional eye icon */}
       <View
-        className={`flex-row items-center rounded-xl border-2 px-4 ${editable ? 'border-gray-100' : 'border-gray-200 bg-gray-50'
+        className={`flex-row items-center rounded-xl border-2 border-gray-300 px-4 ${editable ? 'border-gray-700' : 'bg-gray-50 '
           }`}
       >
         <TextInput

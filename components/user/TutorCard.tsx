@@ -11,7 +11,7 @@ const TutorCard = ({ tutor }: { tutor: GetAllTutorData }) => {
     console.log(tutor.id);
 
     return (
-        <View className="bg-tranparent border-2 border-gray-100 drop-shadow-lg mx-auto rounded-xl p-5 my-3 w-[95%] gap-1">
+        <View className="bg-tranparent border-2 border-gray-200 drop-shadow-lg mx-auto rounded-xl p-5 my-3 w-[95%] gap-1">
             <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center" style={{ flex: 1, minWidth: 0 }}>
                     <Image
@@ -90,8 +90,8 @@ const TutorCard = ({ tutor }: { tutor: GetAllTutorData }) => {
                     outline
                     onPress={() =>
                         router.push({
-                            pathname: '/',
-                            params: { tutorId: String(tutor.id) },
+                            pathname: '/sections/tutor/[id]',
+                            params: { id: String(tutor.id) }
                         })
                     }
                     title="See Profile"

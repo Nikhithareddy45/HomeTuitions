@@ -94,6 +94,7 @@ const UserProfile: React.FC = () => {
     if (!editedData) return;
     try {
       const currentUser = await getCurrentUser();
+      console.log(currentUser )
       if (!currentUser?.id) {
         Alert.alert('Error', 'User not found, please login again.');
         return;
@@ -115,9 +116,7 @@ const UserProfile: React.FC = () => {
         },
       };
       setLoading(true);
-      console.log(payload)
       const updatedUser = await UpdateStudentAPI(payload, String(currentUser.id));
-      console.log(updatedUser)
       setUserData(updatedUser);
       setEditedData(updatedUser);
       await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
@@ -168,7 +167,8 @@ const UserProfile: React.FC = () => {
     >
       <ScrollView
         className="flex-1"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} 
+         />}
       >
         {/* Header */}
         <View className="pt-5 pb-24">

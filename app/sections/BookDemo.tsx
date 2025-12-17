@@ -5,7 +5,8 @@ import DOBPicker from '@/components/ui/DOBInput';
 import Input from '@/components/ui/Input';
 import TimePicker from '@/components/ui/TimePicker';
 import { BookDemoAPI } from '@/services/booking';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect,   useState } from 'react';
+import { getCurrentUser } from '@/utils/getUserFromStorage';
 import { useLocalSearchParams } from 'expo-router';
 import {
   Alert,
@@ -26,7 +27,11 @@ const BookDemo: React.FC = () => {
     );
     return null;
   }
+
+  
   const [loading, setLoading] = useState(false)
+  const currentUser = getCurrentUser()
+  console.log(currentUser)
   const [formData, setFormData] = useState({
     username: '',
     tutorId: tutorId,
@@ -55,8 +60,13 @@ const BookDemo: React.FC = () => {
   
   const handleSubmit = async () => {
     try {
-      console.log(formData)
-      const response = await BookDemoAPI(formData)
+      const payload = {
+        tutorId: formData.tutorId,
+        message: formData.message,
+        demoDate: formData.demoDate,
+        demoTime: formData.demoTime,
+      }
+      const response = await BookDemoAPI(payload)
       if (!response.ok) {
         Alert.alert(
           'Success',
