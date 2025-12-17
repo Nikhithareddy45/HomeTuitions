@@ -1,0 +1,55 @@
+import { getTokenFromStorage } from "@/utils/getUserFromStorage";
+import axios, { AxiosError } from "axios";
+import { base_url } from "@/utils/url";
+import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export const getMyEnquiriesAPI = async (): Promise<any> => {
+  try {
+    const token = await getTokenFromStorage();
+    
+    if (!token) {
+      console.log("No authentication token found. Redirecting to login...");
+      // Redirect to login if no token
+      router.replace("/(auth)/login");
+      throw new Error("Authentication required");
+    }
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    };
+
+    const response = await axios.get(
+      `${base_url}/api/enquiry/v1/enquiry/myapplications`,
+      config
+    );
+    
+    return response.data;
+  } catch (error: any) {
+    console.error("Enquiry API error:", error.message);
+    
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      
+      // Handle 401 Unauthorized
+      if (axiosError.response?.status === 401) {
+        console.log("Session expired. Redirecting to login...");
+        // Clear any existing auth state
+        await AsyncStorage.removeItem("token");
+        // Redirect to login
+        router.replace("/(auth)/login");
+      }
+      
+      // Throw a more descriptive error
+      throw new Error(
+        "Failed to fetch enquiries. Please try again."
+      );
+    }
+    
+    throw new Error("An unexpected error occurred. Please try again later.");
+  }
+};
