@@ -44,7 +44,7 @@ const Input: React.FC<InputProps> = ({
 
       {/* Input row with optional eye icon */}
       <View
-        className={`flex-row items-center rounded-xl border-2 border-gray-300 px-4 ${editable ? 'border-gray-700' : 'bg-gray-50 '
+        className={`flex-row items-center rounded-xl border-2 px-4 ${editable ? 'border-gray-300' : 'bg-gray-50 border-gray-500'
           }`}
       >
         <TextInput

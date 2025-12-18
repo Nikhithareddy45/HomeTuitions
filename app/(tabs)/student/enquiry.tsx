@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import EnquiryRequestCard from '@/components/EnquiryCard';
 import { getMyEnquiriesAPI } from '@/services/enquiry';
 import { EnquiryAPI } from '@/types/enquiry';
+import { Pressable } from 'react-native';
 
 const EnquiryTabScreen = () => {
   const router = useRouter();
@@ -42,14 +43,20 @@ const EnquiryTabScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-slate-50 ">
       {/* Header */}
-      <View className="flex-row items-center px-4 mt-1 mb-3">
+      <View className="flex-row items-center justify-around px-4 mt-1 mb-3">
         <BackButton />
         <Text className="text-2xl font-semibold ml-2">
           Your Enquiries
         </Text>
+        <View className='bg-accent rounded-full p-2 '>
+          <Pressable onPress={() => { router.push('/sections/OfflineStatus/BookOffline') }}>
+            <Plus color="#115bca" size={24} />
+          </Pressable>
+        </View>
       </View>
+
       <View>
-        
+
       </View>
 
       {loading ? (
@@ -85,19 +92,19 @@ const EnquiryTabScreen = () => {
       ) : (
         <View className='px-3'>
           <FlatList
-          data={enquiries}
-          keyExtractor={item => String(item.id)}
-          renderItem={({ item }) => (
-            <EnquiryRequestCard
-              data={item}
-              onPress={() =>
-                // router.push(`/sections/OfflineStatus/${item.id}`)
-                router.push('/')
-              }
-            />
-          )}
-          contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
-        />
+            data={enquiries}
+            keyExtractor={item => String(item.id)}
+            renderItem={({ item }) => (
+              <EnquiryRequestCard
+                data={item}
+                onPress={() =>
+                  // router.push(`/sections/OfflineStatus/${item.id}`)
+                  router.push('/')
+                }
+              />
+            )}
+            contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+          />
         </View>
       )}
 

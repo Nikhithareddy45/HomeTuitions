@@ -25,3 +25,21 @@ export interface EnquiryAPI {
   tutor_allocated: number | null;
   created: string;
 }
+
+export interface EnquiryData {
+  username: string;
+  email: string;
+  mobileNumber: string;
+  address: string;
+  boards: string[];
+  classes: string[];
+  subjects: string[];
+  teachingLanguage: string;
+  teachingSection: string;
+  startTime: string;
+  endTime: string;
+  minPrice: string;
+  maxPrice: string;
+  additionalMessage: string;
+  [key: string]: any;
+}

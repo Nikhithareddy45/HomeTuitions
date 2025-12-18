@@ -3,6 +3,7 @@ import axios, { AxiosError } from "axios";
 import { base_url } from "@/utils/url";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { EnquiryData } from "../types/enquiry";
 
 export const getMyEnquiriesAPI = async (): Promise<any> => {
   try {
@@ -51,5 +52,27 @@ export const getMyEnquiriesAPI = async (): Promise<any> => {
     }
     
     throw new Error("An unexpected error occurred. Please try again later.");
+  }
+};
+
+export const sendEnquiryAPI = async (data: EnquiryData): Promise<any> => {
+  try {
+    const token = await getTokenFromStorage();
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    };
+    const response = await axios.post(
+      `${base_url}/api/enquiry/v1/enquiry/`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    console.log("API error response:", error);
+    throw error;
   }
 };

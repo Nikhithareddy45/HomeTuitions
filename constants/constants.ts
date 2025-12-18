@@ -43,3 +43,10 @@ export const section_options = [
   { label: 'Evening', value: 'evening' },
   { label: 'Night', value: 'night' },
 ];
+
+export const language_options =[
+   {label:'Telugu', value:'telugu'},
+    {label:'English', value:'english'},
+    {label:'Hindi', value:'hindi'},
+    {label:'Other', value:'other'},
+]
