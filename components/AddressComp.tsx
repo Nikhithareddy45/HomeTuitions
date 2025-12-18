@@ -68,11 +68,11 @@ const AddressForm: React.FC<Props> = ({
                 />
             </View>
 
-            <Input label="Street" value={address.street} editable={editable} onChangeText={t => handleField('street', t)} />
-            <Input label="City" value={address.city} editable={editable} onChangeText={t => handleField('city', t)} />
-            <Input label="Pin Code" value={address.pin_code} editable={editable} onChangeText={t => handleField('pin_code', t)} />
-            <Input label="State" value={address.state} editable={editable} onChangeText={t => handleField('state', t)} />
-            <Input label="Country" value={address.country} editable={editable} onChangeText={t => handleField('country', t)} />
+            <Input label="Street" value={address.street} editable={editable} onChangeText={t => handleField('street', t)} iconName='MapPin' />
+            <Input label="City" value={address.city} editable={editable} onChangeText={t => handleField('city', t)}  iconName='MapPin'/>
+            <Input label="Pin Code" value={address.pin_code} editable={editable} onChangeText={t => handleField('pin_code', t)}  iconName='MapPin'/>
+            <Input label="State" value={address.state} editable={editable} onChangeText={t => handleField('state', t)}  iconName='MapPin'/>
+            <Input label="Country" value={address.country} editable={editable} onChangeText={t => handleField('country', t)} iconName='MapPin' />
         </View>
     );
 };

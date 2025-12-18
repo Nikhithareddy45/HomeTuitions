@@ -140,9 +140,6 @@ const handleLogout = async () => {
     ]);
   };
 
-const handleNotifications = () => {
-    router.push('/sections/Notifications');
-  };
   return (
     <View className="flex-1 bg-gray-50 px-4 pt-4 gap-1">
       <View className="rounded-full flex-row items-center justify-between mx-4 my-2 ">
@@ -154,11 +151,11 @@ const handleNotifications = () => {
           />
           <Text className="text-lg font-bold">Home Tuitions</Text>
         </View>
-        <View className="flex-row items-center gap-3">
-           <Pressable onPress={handleLogout}>
+        <View className="flex-row items-center gap-6">
+            <Pressable onPress={() => { router.push('/sections/Notifications') }}>
             <Bell color="#2673d6ff"/>
           </Pressable>
-          <Pressable onPress={handleNotifications}>
+          <Pressable onPress={handleLogout}>
             <LogOut color="#e05555ff"/>
           </Pressable>         
         </View>

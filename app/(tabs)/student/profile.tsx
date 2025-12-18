@@ -171,8 +171,9 @@ const UserProfile: React.FC = () => {
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 ,paddingBottom:100}}
       >
-        <View className="px-4 mt-4 gap-4">
+        <View className="px-8 mt-4 gap-2">
           {/* Header */}
           <View className="flex-row justify-between items-center">
             <Text className="text-xl font-bold">My Profile</Text>
@@ -187,6 +188,7 @@ const UserProfile: React.FC = () => {
               label="Username"
               value={editedData?.username || ''}
               editable={isEditing}
+               iconName="User"
               onChangeText={t =>
                 setEditedData(p => (p ? { ...p, username: t } : p))
               }
@@ -196,12 +198,14 @@ const UserProfile: React.FC = () => {
               label="Email"
               value={editedData?.email || ''}
               editable={false}
+              iconName='Mail'
             />
 
             <Input
               label="Mobile Number"
               value={editedData?.mobile_number || ''}
               editable={isEditing}
+              iconName='Phone'
               onChangeText={t =>
                 setEditedData(p => (p ? { ...p, mobile_number: t } : p))
               }
@@ -230,8 +234,10 @@ const UserProfile: React.FC = () => {
           {/* Buttons */}
           {isEditing ? (
             <>
-              <Button title="Save Changes" onPress={handleSave} />
-              <Button title="Cancel" outline onPress={handleCancel} />
+              <View className='flex-row gap-2'>
+                <Button title="Save Changes" onPress={handleSave} className='w-[38%]' icon='check'/>
+              <Button title="Cancel" outline onPress={handleCancel} className='w-[38%]' icon='x' />
+              </View>
             </>
           ) : (
             <Button title="Logout" outline onPress={handleLogout} />

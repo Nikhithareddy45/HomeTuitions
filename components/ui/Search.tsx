@@ -18,7 +18,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const showClear = value.length > 0;
 
   return (
-    <View className="flex-row items-center m-2 px-4 py-2 rounded-full bg-white-100 border-2 border-gray-300 shadow-sm w-[85%] h-16">
+    <View className="flex-row items-center m-2 px-3 py-2 rounded-lg bg-white-100 border-2 border-gray-300 shadow-sm w-[85%] h-16">
       <Search size={18} color="#636363ff" />
       <TextInput
         className="flex-1 ml-2 text-[15px] text-gray-900 "
@@ -34,7 +34,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         <Pressable
           onPress={onClear}
           hitSlop={8}
-          className="ml-1 rounded-full p-1"
+          className="ml-1 rounded-full"
         >
           <X size={16} color="#6b7280" />
         </Pressable>
