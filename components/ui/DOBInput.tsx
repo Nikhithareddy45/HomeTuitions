@@ -63,7 +63,7 @@ const DOBPicker: React.FC<DOBPickerProps> = ({
 
       {/* Input box */}
       <Pressable onPress={() => setShow(true)}>
-        <View className="rounded-xl h-14 px-4 border-2 border-gray-100 flex-row items-center justify-between bg-white">
+        <View className="rounded-xl h-14 px-4 border-2 border-gray-300 flex-row items-center justify-between bg-white">
           <Text
             className={`text-base ${
               formattedDisplay ? "text-gray-900" : "text-gray-400"

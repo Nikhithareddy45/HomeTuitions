@@ -13,15 +13,17 @@ import { useFormReset } from '@/utils/useFormReset';
 import { tutorRegistrationSchema } from '@/utils/validationYup';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 const TutorRegister: React.FC = () => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const refreshToken = useRefreshStore((state: any) => state.refreshToken);
+  const { refreshToken, triggerRefresh } = useRefreshStore();
+  const router = useRouter();
 
   const [formData, setFormData] = useState({
     username: 'tutor',
@@ -59,6 +61,7 @@ const TutorRegister: React.FC = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string>('');
+  const [refreshing, setRefreshing] = useState(false);
   const resetForm = () => {
     setFormData({
       username: 'tutor',
@@ -94,6 +97,13 @@ const TutorRegister: React.FC = () => {
 
   useFormReset(resetForm);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    resetForm();
+    setRefreshing(false);
+  }, [resetForm]);
+
+  // Handle refresh token changes
   useEffect(() => {
     resetForm();
   }, [refreshToken]);
@@ -220,36 +230,14 @@ const TutorRegister: React.FC = () => {
       const response = await registerTutor(payload as any);
       console.log('Tutor register response', response);
 
-      Alert.alert('Success', 'Tutor registered successfully');
-
-      setFormData({
-        username: 'tutor',
-        email: 'tutor@gmail.com',
-        mobile_number: '9876543210',
-        password: '123456',
-        confirm_password: '123456',
-        gender: 'Male',
-        language: 'English',
-        image: null,
-        subjects: [],
-        classes: [],
-        board: [],
-        education_qualification: '',
-        experience: '3',
-        price: '300',
-        availabilities: [],
-        about: 'Well experienced tutor',
-        address: {
-          street: '',
-          city: '',
-          state: '',
-          pin_code: '',
-          country: '',
-        },
-      });
-      setErrors({});
-      setSelectedLocation(null);
-      setStep(1);
+      if (response) {
+        Alert.alert('Success', 'Registration successful! Please login to continue.');
+        triggerRefresh(); // Refresh the form state
+        router.replace('/(auth)/login');
+        setErrors({});
+        setSelectedLocation(null);
+        setStep(1);
+      }
     } catch (err: any) {
       console.log('Register tutor error', err?.response?.data || err);
       const errorData = err?.response?.data;
@@ -290,11 +278,17 @@ const TutorRegister: React.FC = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
       className="flex-1 w-[90%] mx-auto"
     >
-      <BackButton />
+      <BackButton/>
       <ScrollView
         contentContainerStyle={{ padding: 24, paddingTop: 3 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+          />
+        }
       >
         <View className="items-center mb-8">
           <Text className="text-3xl font-bold text-primary text-center mb-2">

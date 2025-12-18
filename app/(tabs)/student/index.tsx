@@ -3,11 +3,12 @@ import SearchBar from '@/components/ui/Search';
 import TutorCard from '@/components/user/TutorCard';
 import { getAllTutorsAPI } from '@/services/tutor';
 import { useFilterStore } from '@/store/useFilterStore';
+import { useRefreshStore } from '@/store/useRefreshStore';
 import { GetAllTutorData } from '@/types/tutor';
 import { useRouter } from 'expo-router';
 import { FunnelPlus } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, View, Text } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
 // Filter function (NO location)
 const applyFilters = (tutors: GetAllTutorData[], filters: Record<string, string[]>, query: string) => {
@@ -82,33 +83,41 @@ const Search = () => {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [tutors, setTutors] = useState<GetAllTutorData[]>([]);
-  const setLoading = useState(false)[1];
-
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const appliedFilters = useFilterStore((state) => state.selectedFilters);
+  const { refreshToken } = useRefreshStore();
 
-  // Fetch tutors
-  useEffect(() => {
-    const load = async () => {
+  const loadTutors = async () => {
+    try {
       setLoading(true);
-      try {
-        const data = await getAllTutorsAPI();
-        setTutors(data);
-      } catch (e) {
-        console.log('Failed to load tutors', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+      const data = await getAllTutorsAPI();
+      setTutors(data);
+    } catch (e) {
+      console.log('Failed to load tutors', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Initial load and refresh on token change
+  useEffect(() => {
+    loadTutors();
+  }, [refreshToken]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadTutors();
+  };
 
   const tutorsToShow = useMemo(() => {
-    console.log('Applying filters:', {
-      tutorCount: tutors.length,
-      appliedFilters,
-      query,
-      filteredCount: applyFilters(tutors, appliedFilters, query).length
-    });
+    // console.log('Applying filters:', {
+    //   tutorCount: tutors.length,
+    //   appliedFilters,
+    //   query,
+    //   filteredCount: applyFilters(tutors, appliedFilters, query).length
+    // });
     return applyFilters(tutors, appliedFilters, query);
   }, [tutors, appliedFilters, query]);
 
@@ -133,6 +142,14 @@ const Search = () => {
       <FlatList
         data={tutorsToShow}
         keyExtractor={(item) => String(item.id)}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#2563eb']}
+            tintColor='#2563eb'
+          />
+        }
         renderItem={({ item }) => <TutorCard tutor={item} />}
         contentContainerStyle={{
           paddingBottom: 80,

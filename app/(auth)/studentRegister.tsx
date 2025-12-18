@@ -7,16 +7,18 @@ import { registerStudent } from '@/services/auth';
 import { useRefreshStore } from '@/store/useRefreshStore';
 import { useFormReset } from '@/utils/useFormReset';
 import {
-    studentRegistrationSchema
+  studentRegistrationSchema
 } from '@/utils/validationYup';
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
 } from 'react-native';
 
 
@@ -24,8 +26,10 @@ const StudentRegistrationSinglePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const refreshToken = useRefreshStore((state: any) => state.refreshToken);
+  const { refreshToken } = useRefreshStore();
+  const router = useRouter();
   
   const [formData, setFormData] = useState({
     username: '',
@@ -70,9 +74,16 @@ const StudentRegistrationSinglePage: React.FC = () => {
 
   useFormReset(resetForm);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    resetForm();
+    setRefreshing(false);
+  }, [resetForm]);
+
+  // Handle refresh token changes
   useEffect(() => {
     resetForm();
-  }, [refreshToken]);;
+  }, [refreshToken]);
 
   const handleChange = (key: string, value: string) => {
     setFormData(prev => {
@@ -133,25 +144,15 @@ const StudentRegistrationSinglePage: React.FC = () => {
       }
 
       const response = await registerStudent(payload);
-      if (!response.ok) {
-        Alert.alert(
-          'Success',
-          `${response.message}`,
-          [{ text: 'OK', onPress: () => { } }],
-        );
+      if (response) {
+        Alert.alert('Success', 'Registration successful! Please login to continue.');
+        router.replace('/(auth)/login');
       }
-      console.log('Register success:', response);
-
-      // Reset state silently
-      setFormData({
-        ...formData
-      });
-      setErrors({});
-      setSelectedLocation(null);
-      setCurrentStep(1);
-    } catch (err: any) {
-      // Suppress console error to avoid black error message at bottom
-      const data = err?.response?.data;
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error.message || 'Registration failed. Please try again.';
+      Alert.alert('Error', errorMessage);
+      
+      const data = error?.response?.data;
 
       if (data && typeof data === 'object') {
         const fieldErrors: Record<string, string> = {};
@@ -190,7 +191,7 @@ const StudentRegistrationSinglePage: React.FC = () => {
       } else {
         Alert.alert(
           '⚠️ Registration Error',
-          err?.response?.data?.message || err.message || 'Registration failed',
+          error?.response?.data?.message || error.message || 'Registration failed',
         );
       }
     } finally {
@@ -214,6 +215,12 @@ const StudentRegistrationSinglePage: React.FC = () => {
         scrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+          />
+        }
       >
         <View className="items-center mb-8">
           <Text className="text-3xl font-bold text-primary text-center mb-2">

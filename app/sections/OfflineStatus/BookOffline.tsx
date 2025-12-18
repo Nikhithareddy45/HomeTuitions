@@ -1,29 +1,29 @@
 'use client';
 
-import { useState } from 'react';
-import { ScrollView, Text, View, Pressable } from 'react-native';
+import { BackButton } from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import GenericMultiSelect from '@/components/ui/GenericMultiSelect';
 import Input from '@/components/ui/Input';
 import TimePicker from '@/components/ui/TimePicker';
-import {board_options as BOARD_OPTIONS , class_options as CLASS_OPTIONS, subject_options as SUBJECT_OPTIONS, language_options as LANGUAGE_OPTIONS, section_options as SECTION_OPTIONS } from '@/constants/constants';
+import { board_options as BOARD_OPTIONS, class_options as CLASS_OPTIONS, language_options as LANGUAGE_OPTIONS, section_options as SECTION_OPTIONS, subject_options as SUBJECT_OPTIONS } from '@/constants/constants';
 import { sendEnquiryAPI } from '@/services/enquiry';
-import { router } from 'expo-router';
+import { useRefreshStore } from '@/store/useRefreshStore';
+import { getCurrentUser } from '@/utils/getUserFromStorage';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
+import Textarea from '@/components/ui/Textarea';
+
 interface FormData {
-  // Step 1
   username: string;
   email: string;
   mobileNumber: string;
   address: string;
-  
-  // Step 2
   boards: string[];
   classes: string[];
   subjects: string[];
   teachingLanguage: string;
   teachingSection: string;
-  
-  // Step 3
   startTime: string;
   endTime: string;
   minPrice: string;
@@ -50,10 +50,16 @@ const initialFormData: FormData = {
 };
 
 const BookOffline = () => {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string | string[]>>({});
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const { refreshToken, triggerRefresh } = useRefreshStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
@@ -69,7 +75,7 @@ const BookOffline = () => {
       newErrors.mobileNumber = 'Invalid mobile number';
     }
     if (!formData.address) newErrors.address = 'Address is required';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -81,22 +87,80 @@ const BookOffline = () => {
     if (formData.subjects.length === 0) newErrors.subjects = 'Please select at least one subject';
     if (!formData.teachingLanguage) newErrors.teachingLanguage = 'Please select teaching language';
     if (!formData.teachingSection) newErrors.teachingSection = 'Please select teaching section';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const resetForm = useCallback(() => {
+    setFormData(initialFormData);
+    setErrors({});
+    setCurrentStep(1);
+    setSubmitError(null);
+  }, []);
+
+  const loadUserData = useCallback(async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (currentUser) {
+        setFormData(prev => ({
+          ...prev,
+          username: currentUser.username || '',
+          email: currentUser.email || '',
+          mobileNumber: currentUser.mobile_number || '',
+          address: currentUser.address?.formatted_address || ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData, refreshToken]);
+
   const handleSubmit = async () => {
     try {
-      const res = await sendEnquiryAPI(formData)
-      if(res.ok){
-       console.log("form submitted")         
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      const response = await sendEnquiryAPI(formData);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit enquiry. Please try again.');
       }
-      router.replace("/(tabs)/student/enquiry")
+      if (response.ok) {
+        // Trigger refresh in parent components
+        triggerRefresh();
+
+        // Show success message before redirecting
+        Alert.alert(
+          'Success',
+          'Your enquiry has been submitted successfully!',
+          [{
+            text: 'OK',
+            onPress: () => {
+              resetForm();
+              router.push("/(tabs)/student/enquiry");
+            }
+          }]
+        );
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit enquiry. Please try again.');
+      }
     } catch (error) {
-      
+      console.error('Enquiry submission error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setSubmitError(errorMessage);
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
-    console.log('Form submitted:', formData);
   };
 
   const nextStep = () => {
@@ -115,17 +179,21 @@ const BookOffline = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Only update errors if the field has an error
     if (errors[field]) {
-      const newErrors = { ...errors };
-      delete newErrors[field];
-      setErrors(newErrors);
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
-  };
+  }, [errors]);
 
   const handleMultiSelect = (field: string, values: string[]) => {
     setFormData(prev => ({
@@ -142,7 +210,7 @@ const BookOffline = () => {
   const renderStep1 = () => (
     <View className="space-y-4">
       <Text className="text-lg font-semibold mb-4">Personal Information</Text>
-      
+
       <Input
         label="Username"
         value={formData.username}
@@ -150,7 +218,7 @@ const BookOffline = () => {
         placeholder="Enter your name"
         error={errors.username as string}
       />
-      
+
       <Input
         label="Email Address"
         value={formData.email}
@@ -160,7 +228,7 @@ const BookOffline = () => {
         autoCapitalize="none"
         error={errors.email as string}
       />
-      
+
       <Input
         label="Mobile Number"
         value={formData.mobileNumber}
@@ -170,15 +238,15 @@ const BookOffline = () => {
         maxLength={10}
         error={errors.mobileNumber as string}
       />
-      
-      <Input
+
+      <Textarea
         label="Home Address"
         value={formData.address}
         onChangeText={(text: string) => handleInputChange('address', text)}
         placeholder="Enter your full address"
-        multiline
-        numberOfLines={3}
         error={errors.address as string}
+        iconName="Home"
+        className="mb-4"
       />
     </View>
   );
@@ -186,7 +254,7 @@ const BookOffline = () => {
   const renderStep2 = () => (
     <View className="space-y-4">
       <Text className="text-lg font-semibold mb-4">Requirements</Text>
-      
+
       <View>
         <Text className="text-sm font-medium mb-1">Board (Select multiple)</Text>
         <GenericMultiSelect
@@ -203,7 +271,7 @@ const BookOffline = () => {
           <Text className="text-red-500 text-xs mt-1">{errors.boards}</Text>
         )}
       </View>
-      
+
       <View>
         <Text className="text-sm font-medium mb-1">Classes (Select multiple)</Text>
         <GenericMultiSelect
@@ -220,14 +288,14 @@ const BookOffline = () => {
           <Text className="text-red-500 text-xs mt-1">{errors.classes}</Text>
         )}
       </View>
-      
+
       <View>
         <Text className="text-sm font-medium mb-1">Subjects (Select multiple)</Text>
         <GenericMultiSelect
           iconName="BookOpenText"
           label="Subjects"
           placeholder="Select subjects"
-          options={SUBJECT_OPTIONS.map((o:any) => o.label)}
+          options={SUBJECT_OPTIONS.map((o: any) => o.label)}
           value={formData.subjects}
           onChange={(values) => handleMultiSelect('subjects', values)}
           open={openDropdown === 'subjects'}
@@ -237,14 +305,14 @@ const BookOffline = () => {
           <Text className="text-red-500 text-xs mt-1">{errors.subjects}</Text>
         )}
       </View>
-      
+
       <View>
         <Text className="text-sm font-medium mb-1">Teaching Language</Text>
         <GenericMultiSelect
           iconName="Languages"
           label="Language"
           placeholder="Select language"
-          options={LANGUAGE_OPTIONS.map((o:any) => o.label)}
+          options={LANGUAGE_OPTIONS.map((o: any) => o.label)}
           value={formData.teachingLanguage ? [formData.teachingLanguage] : []}
           onChange={(values) => handleInputChange('teachingLanguage', values[0] || '')}
           open={openDropdown === 'language'}
@@ -254,14 +322,14 @@ const BookOffline = () => {
           <Text className="text-red-500 text-xs mt-1">{errors.teachingLanguage}</Text>
         )}
       </View>
-      
+
       <View>
         <Text className="text-sm font-medium mb-1">Teaching Section</Text>
         <GenericMultiSelect
           iconName="LayoutGrid"
           label="Section"
           placeholder="Select section"
-          options={SECTION_OPTIONS.map((o:any) => o.label)}
+          options={SECTION_OPTIONS.map((o: any) => o.label)}
           value={formData.teachingSection ? [formData.teachingSection] : []}
           onChange={(values) => handleInputChange('teachingSection', values[0] || '')}
           open={openDropdown === 'section'}
@@ -277,7 +345,7 @@ const BookOffline = () => {
   const renderStep3 = () => (
     <View className="space-y-4">
       <Text className="text-lg font-semibold mb-4">Schedule & Budget</Text>
-      
+
       <View className="flex-row space-x-4">
         <View className="flex-1">
           <TimePicker
@@ -294,7 +362,7 @@ const BookOffline = () => {
           />
         </View>
       </View>
-      
+
       <View className="flex-row space-x-4">
         <View className="flex-1">
           <Input
@@ -315,14 +383,14 @@ const BookOffline = () => {
           />
         </View>
       </View>
-      
-      <Input
+
+      <Textarea
         label="Additional Message"
         value={formData.additionalMessage}
         onChangeText={(text: string) => handleInputChange('additionalMessage', text)}
         placeholder="Any additional requirements or notes"
-        multiline
-        numberOfLines={4}
+        iconName="MessageCircle"
+        className="mb-4"
       />
     </View>
   );
@@ -332,14 +400,12 @@ const BookOffline = () => {
       {[1, 2, 3].map((step) => (
         <View key={step} className="items-center">
           <View
-            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              currentStep === step ? 'bg-blue-500' : 'bg-gray-200'
-            }`}
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === step ? 'bg-blue-500' : 'bg-gray-200'
+              }`}
           >
             <Text
-              className={`font-medium ${
-                currentStep === step ? 'text-white' : 'text-gray-600'
-              }`}
+              className={`font-medium ${currentStep === step ? 'text-white' : 'text-gray-600'
+                }`}
             >
               {step}
             </Text>
@@ -353,31 +419,80 @@ const BookOffline = () => {
     </View>
   );
 
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadUserData().finally(() => setRefreshing(false));
+  }, [loadUserData]);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text className="mt-4 text-gray-600">Loading form data...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1 bg-white p-4">
-      <Text className="text-2xl font-bold mb-2">Book Offline Tuition</Text>
-      <Text className="text-gray-600 mb-6">Fill in the details to find the best tutor for you</Text>
-      
-      {renderStepIndicator()}
-      
-      <ScrollView className="flex-1">
+    <ScrollView
+      className="flex-1 bg-white"
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={['#2563eb']}
+          tintColor='#2563eb'
+        />
+      }
+    >
+      <View className='p-6'>
+        <BackButton />
+      </View>
+      <View className="px-12">
+        <Text className="text-2xl font-bold mb-2">Book Offline Tuition</Text>
+        <Text className="text-gray-600 mb-6">Fill in the details to find the best tutor for you</Text>
+
+        {renderStepIndicator()}
+
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
-      </ScrollView>
-      
-      <View className="flex-row justify-between mt-6">
-        <Button
-          title='Back'
-          outline
-          onPress={prevStep}
-          disabled={currentStep === 1}
-          className={`${currentStep === 1 ? 'opacity-50' : ''}`}
-        />
-        <Button onPress={nextStep}
-          title={currentStep === 3 ? 'Submit' : 'Next'}/>
+
+        <View className="flex-row justify-between mt-6">
+
+          <View className="flex-row space-x-2 items-center justify-center w-full">
+            <Button
+              title="Reset"
+              onPress={() => {
+                Alert.alert(
+                  'Reset Form',
+                  'Are you sure you want to reset the form? All your changes will be lost.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Reset',
+                      style: 'destructive',
+                      onPress: () => {
+                        resetForm();
+                        setCurrentStep(1);
+                      }
+                    }
+                  ]
+                );
+              }}
+              outline={true}
+              className="w-[40%]"
+            />
+            <Button
+              title={currentStep === 3 ? 'Submit Enquiry' : 'Next'}
+              onPress={nextStep}
+              loading={isSubmitting}
+              className="w-[40%]"
+            />
+          </View>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

@@ -4,22 +4,22 @@ import Input from '@/components/ui/Input';
 import { Images } from '@/constants/images';
 import { LoginAPI } from '@/services/auth';
 import { useRefreshStore } from '@/store/useRefreshStore';
-import { useFormReset } from '@/utils/useFormReset';
-import { loginSchema } from '@/utils/validationYup';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setUserCache } from "@/utils/getUserFromStorage";
 import { queryClient } from "@/utils/reactQueryClient"; // You must create this
+import { useFormReset } from '@/utils/useFormReset';
+import { loginSchema } from '@/utils/validationYup';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  Text,
-  View,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    Text,
+    View,
 } from 'react-native';
 
 const Login: React.FC = () => {
@@ -36,8 +36,7 @@ const Login: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const triggerRefresh = useRefreshStore((state) => state.triggerRefresh);
-  const refreshToken = useRefreshStore((state) => state.refreshToken);
+  const { triggerRefresh, refreshToken } = useRefreshStore();
 
   const resetForm = () => {
     setFormData({
@@ -47,14 +46,9 @@ const Login: React.FC = () => {
     setErrors({});
   };
 
-
+  // Handle refresh and role changes
   useEffect(() => {
-    const defaultEmail = role === 'student' ? 'test' : 'professor';
-    setFormData({
-      username: defaultEmail,
-      password: '123456',
-    });
-    setErrors({});
+    resetForm();
   }, [role, refreshToken]);
 
   useFormReset(resetForm);
@@ -95,7 +89,6 @@ const Login: React.FC = () => {
       }
 
       const response = await LoginAPI(payload);
-      console.log(response)
 
       if (!response.ok) {
         Alert.alert('Success', 'Login successfully');

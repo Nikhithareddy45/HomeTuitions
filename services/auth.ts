@@ -5,7 +5,6 @@ import { base_url } from "../utils/url";
 
 export const registerStudent = async (payload: UserData): Promise<any> => {
   try { 
-    console.log("payload", payload )
     const config = {
       headers: { "Content-Type": "application/json" },
     };
@@ -14,7 +13,6 @@ export const registerStudent = async (payload: UserData): Promise<any> => {
       payload,
       config
     );
-    console.log(response.data)
     return response.data;
   } catch (error: any) {
     console.error("Registration error:", error.response?.data || error.message);
@@ -23,7 +21,6 @@ export const registerStudent = async (payload: UserData): Promise<any> => {
 };
 export const registerTutor = async (payload: TutorData): Promise<any> => {
   try { 
-    console.log("payload", payload )
     const config = {
       headers: { "Content-Type": "application/json" },
     };
@@ -32,7 +29,6 @@ export const registerTutor = async (payload: TutorData): Promise<any> => {
       payload,
       config
     );
-    console.log(response.data)
     return response.data;
   } catch (error: any) {
     console.error("Registration error:", error.response?.data || error.message);

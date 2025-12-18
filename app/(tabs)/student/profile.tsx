@@ -44,20 +44,18 @@ const UserProfile: React.FC = () => {
     setLoading(true);
     try {
       const currentUser = await getCurrentUser();
-      console.log("currentUser",currentUser)
       if (!currentUser) {
         Alert.alert('Error', 'User not found, please login again.');
         return;
       }
 
       const data = await GetProfileAPI(currentUser.id.toString());
-      console.log("data",data)
       setUserData(data);
       setEditedData(data);
       setImageUri(data.profile_image || null);
     } catch (error) {
-      console.error('Error loading profile:', error);
-      Alert.alert('Error', 'Failed to load profile data.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load profile data.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -146,7 +144,7 @@ const UserProfile: React.FC = () => {
         onPress: async () => {
           await AsyncStorage.clear();
           setUserCache(null);
-          router.replace('/(auth)/login');
+          router.replace({ pathname: '/(auth)/login', params: { role: 'student' } });
         },
       },
     ]);

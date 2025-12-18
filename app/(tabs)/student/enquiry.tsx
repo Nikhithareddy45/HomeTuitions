@@ -1,26 +1,30 @@
 // app/(tabs)/enquiry.tsx
-import React, { useEffect, useState } from 'react';
+import EnquiryRequestCard from '@/components/EnquiryCard';
+import { BackButton } from '@/components/ui/BackButton';
+import { getMyEnquiriesAPI } from '@/services/enquiry';
+import { useRefreshStore } from '@/store/useRefreshStore';
+import { EnquiryAPI } from '@/types/enquiry';
+import { useRouter } from 'expo-router';
+import { Plus } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BackButton } from '@/components/ui/BackButton';
-import { Plus } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import EnquiryRequestCard from '@/components/EnquiryCard';
-import { getMyEnquiriesAPI } from '@/services/enquiry';
-import { EnquiryAPI } from '@/types/enquiry';
-import { Pressable } from 'react-native';
 
 const EnquiryTabScreen = () => {
   const router = useRouter();
   const [enquiries, setEnquiries] = useState<EnquiryAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const { refreshToken } = useRefreshStore();
 
   const loadEnquiries = async () => {
     try {
@@ -38,7 +42,12 @@ const EnquiryTabScreen = () => {
 
   useEffect(() => {
     loadEnquiries();
-  }, []);
+  }, [refreshToken]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadEnquiries().finally(() => setRefreshing(false));
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50 ">
@@ -94,12 +103,20 @@ const EnquiryTabScreen = () => {
           <FlatList
             data={enquiries}
             keyExtractor={item => String(item.id)}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#2563eb']}
+                tintColor='#2563eb'
+              />
+            }
             renderItem={({ item }) => (
               <EnquiryRequestCard
                 data={item}
                 onPress={() =>
-                  // router.push(`/sections/OfflineStatus/${item.id}`)
-                  router.push('/')
+                  router.push(`/sections/OfflineStatus/${item.id}`)
+                  // router.push('/')
                 }
               />
             )}
@@ -108,13 +125,6 @@ const EnquiryTabScreen = () => {
         </View>
       )}
 
-      {/* Floating Add Button */}
-      <TouchableOpacity
-        className="absolute bottom-8 right-8 w-14 h-14 rounded-full bg-accent items-center justify-center shadow-xl"
-        onPress={() => router.push('/')}
-      >
-        <Plus color="#115bca" size={26} />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };

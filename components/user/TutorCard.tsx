@@ -8,8 +8,6 @@ import Button from "../ui/Button";
 const TutorCard = ({ tutor }: { tutor: GetAllTutorData }) => {
     const address = tutor.user.address;
     const iconSize = 16;
-    console.log(tutor.id);
-
     return (
         <View className="bg-tranparent border-2 border-gray-200 drop-shadow-lg mx-auto rounded-xl p-5 my-3 w-[95%] gap-1">
             <View className="flex-row items-center justify-between">
