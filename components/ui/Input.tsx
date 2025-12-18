@@ -73,7 +73,7 @@ const Input: React.FC<InputProps> = ({
 
       {/* Error */}
       {error && (
-        <View className="flex-row items-center mt-1">
+        <View className="flex-row items-center">
           <View className="mr-1">
             <Icon name="AlertCircle" size={12} color="#ef4444" />
           </View>

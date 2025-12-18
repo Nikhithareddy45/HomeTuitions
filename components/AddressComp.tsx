@@ -1,8 +1,8 @@
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import * as Location from 'expo-location';
 import React, { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 type Address = {
     street: string;
@@ -12,141 +12,67 @@ type Address = {
     country: string;
 };
 
-interface AddressFormProps {
+interface Props {
     address: Address;
     onChange: (addr: Address) => void;
     selectedLocation: { lat: number; lng: number } | null;
     onLocationChange: (loc: { lat: number; lng: number } | null) => void;
+    editable?: boolean;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({
+const AddressForm: React.FC<Props> = ({
     address,
     onChange,
-    selectedLocation,
-    onLocationChange,
+    editable = true,
 }) => {
-    const [loadingLocation, setLoadingLocation] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const handleFieldChange = (key: keyof Address, value: string) => {
+    const handleField = (key: keyof Address, value: string) => {
         onChange({ ...address, [key]: value });
     };
-    const fillAddressFromCoords = async (latitude: number, longitude: number) => {
-        try {
-            const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
-            const first = geocode[0];
-            if (!first) return;
 
-            onChange({
-                street: [first.name, first.street].filter(Boolean).join(' ') || '',
-                city: first.city || first.subregion || '',
-                state: first.region || '',
-                pin_code: first.postalCode || '',
-                country: first.country || '',
-            });
-        } catch (e) {
-            Alert.alert('Error', 'Could not fetch address from location');
-        }
-    };
-
-    const handleUseCurrentLocation = async () => {
+    const handleUseLocation = async () => {
         try {
-            setLoadingLocation(true);
+            setLoading(true);
             const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission denied', 'Location permission is required to autofill address.');
-                return;
-            }
+            if (status !== 'granted') return;
 
             const loc = await Location.getCurrentPositionAsync({});
-            const { latitude, longitude } = loc.coords;
-            onLocationChange({ lat: latitude, lng: longitude });
-            await fillAddressFromCoords(latitude, longitude);
-        } catch (e: any) {
-            Alert.alert('Error', e?.message || 'Failed to get current location');
+            const geo = await Location.reverseGeocodeAsync(loc.coords);
+
+            if (geo[0]) {
+                onChange({
+                    street: geo[0].street || '',
+                    city: geo[0].city || '',
+                    state: geo[0].region || '',
+                    pin_code: geo[0].postalCode || '',
+                    country: geo[0].country || '',
+                });
+            }
+        } catch {
+            Alert.alert('Error', 'Unable to fetch location');
         } finally {
-            setLoadingLocation(false);
+            setLoading(false);
         }
     };
 
     return (
         <View>
-            <View className="flex-row justify-around items-center mb-3">
-                {/* <Text className="text-lg font-semibold text-black">
-                    Address Information
-                </Text> */}
+            <View className="flex-row justify-between items-center mb-3">
+                <Text className="text-lg font-semibold">Address</Text>
                 <Button
-                    title={loadingLocation ? 'Detecting...' : 'Use my location'}
-                    onPress={handleUseCurrentLocation}
+                    title={loading ? 'Detecting...' : 'Use Location'}
+                    onPress={handleUseLocation}
+                    disabled={loading}
                     outline
-                    disabled={loadingLocation}
-                    className="w-[50%] border-2"
-                    icon="map-pin"
                 />
             </View>
 
-            <View className="flex-1 gap-3">
-                <Input
-                    iconName="MapPin"
-                    label="Street"
-                    value={address.street}
-                    onChangeText={text => handleFieldChange('street', text)}
-                    placeholder="Enter your street address"
-                    className="mb-4"
-                />
-
-                <Input
-                    iconName="MapPin"
-                    label="City"
-                    value={address.city}
-                    onChangeText={text => handleFieldChange('city', text)}
-                    placeholder="Enter city"
-                />
-                <Input
-                    iconName="MapPin"
-                    label="Pin Code"
-                    keyboardType="number-pad"
-                    value={address.pin_code}
-                    onChangeText={text => handleFieldChange('pin_code', text)}
-                    placeholder="Enter pin"
-                />
-                <Input
-                    iconName="MapPin"
-                    label="State"
-                    value={address.state}
-                    onChangeText={text => handleFieldChange('state', text)}
-                    placeholder="Enter state"
-                />
-                <Input
-                    iconName="Globe"
-                    label="Country"
-                    value={address.country}
-                    onChangeText={text => handleFieldChange('country', text)}
-                    placeholder="Enter country"
-                />
-            </View>
-
-            {/* <View className="h-56 rounded-xl overflow-hidden mb-4 bg-gray-200">
-                <MapView
-                    className="flex-1"
-                    initialRegion={{
-                        latitude: selectedLocation?.lat || 20.5937,
-                        longitude: selectedLocation?.lng || 78.9629,
-                        latitudeDelta: 10,
-                        longitudeDelta: 10,
-                    }}
-                    onPress={handleMapPress}
-                >
-                    {selectedLocation && (
-                        <Marker
-                            coordinate={{
-                                latitude: selectedLocation.lat,
-                                longitude: selectedLocation.lng,
-                            }}
-                            title="Selected Location"
-                        />
-                    )}
-                </MapView>
-            </View> */}
+            <Input label="Street" value={address.street} editable={editable} onChangeText={t => handleField('street', t)} />
+            <Input label="City" value={address.city} editable={editable} onChangeText={t => handleField('city', t)} />
+            <Input label="Pin Code" value={address.pin_code} editable={editable} onChangeText={t => handleField('pin_code', t)} />
+            <Input label="State" value={address.state} editable={editable} onChangeText={t => handleField('state', t)} />
+            <Input label="Country" value={address.country} editable={editable} onChangeText={t => handleField('country', t)} />
         </View>
     );
 };

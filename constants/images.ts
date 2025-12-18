@@ -1,5 +1,10 @@
+import HomeScreenImage from '@/assets/images/homescreen2.png';
+import LoginStudentImage from '@/assets/images/LoginStudentImage.png';
+import LoginTutorImage from '@/assets/images/LoginTutorImage.png';
+import Logo from '@/assets/images/logo.png';
 export const Images = {
-  HomeScreenImage: require('../assets/images/homescreen2.png'),
-  LoginTutorImage: require('../assets/images/LoginTutorImage.png'),
-  LoginStudentImage:require('../assets/images/LoginStudentImage.png')
+  HomeScreenImage,
+  LoginTutorImage,
+  LoginStudentImage,
+  Logo
 };

@@ -1,8 +1,8 @@
 import { LucideIconName } from '@/types/common';
 import React, { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
+import Button from './Button';
 import Icon from './IconComp';
-
 interface TimePickerProps {
   label?: string;
   value?: string; // HH:MM format
@@ -49,7 +49,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
   };
 
   return (
-    <View className="mb-4 gap-2">
+    <View className="mb-4 gap-2 ">
       {/* Label with icon */}
       <View className="flex-row items-center mb-1">
         {iconName && (
@@ -63,7 +63,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
       {/* Time display field */}
       <Pressable
         onPress={() => setShowModal(true)}
-        className="rounded-lg px-4 py-3 border-2 border-gray-100 flex-row items-center justify-between"
+        className="rounded-lg px-4 py-3 border-2 border-gray-300 flex-row items-center justify-between mr-2"
       >
         <Text className={`text-base ${value ? 'text-gray-900' : 'text-gray-400'}`}>
           {value || 'HH:MM'}
@@ -135,18 +135,20 @@ const TimePicker: React.FC<TimePickerProps> = ({
 
             {/* Buttons */}
             <View className="flex-row gap-3">
-              <Pressable
+
+              <Button
+                title="Cancel"
                 onPress={() => setShowModal(false)}
-                className="flex-1 py-3 rounded-lg border-2 border-gray-300 items-center"
-              >
-                <Text className="text-md font-semibold text-gray-700">Cancel</Text>
-              </Pressable>
-              <Pressable
+                className="flex-1 py-3 rounded-lg items-center w-[45%]"
+                icon="x"
+                outline 
+              />
+              <Button
                 onPress={handleConfirm}
-                className="flex-1 py-3 rounded-lg bg-primary items-center"
-              >
-                <Text className="text-md font-semibold text-white">Confirm</Text>
-              </Pressable>
+                title="Confirm"
+                className="flex-1 py-3 rounded-lg bg-primary items-center w-[45%]"
+                icon="check" />
+
             </View>
           </View>
         </Pressable>

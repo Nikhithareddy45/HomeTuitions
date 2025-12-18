@@ -46,8 +46,9 @@ const Textarea: React.FC<TextareaProps> = ({
       {/* Textarea field */}
       <TextInput
         multiline
-        numberOfLines={5}
-        className={`rounded-lg px-4 py-3 border-2 border-gray-100 text-base
+        numberOfLines={4}
+        style={{ minHeight: 100 }} // Approximately 4 lines of text with some padding
+        className={`rounded-lg px-4 py-3 border-2 border-gray-300 text-base h-[100px]
           ${error ? 'border-danger' : ''}
         `}
         placeholder={placeholder}

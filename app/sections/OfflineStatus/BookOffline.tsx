@@ -4,6 +4,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import GenericMultiSelect from '@/components/ui/GenericMultiSelect';
 import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import TimePicker from '@/components/ui/TimePicker';
 import { board_options as BOARD_OPTIONS, class_options as CLASS_OPTIONS, language_options as LANGUAGE_OPTIONS, section_options as SECTION_OPTIONS, subject_options as SUBJECT_OPTIONS } from '@/constants/constants';
 import { sendEnquiryAPI } from '@/services/enquiry';
@@ -12,7 +13,6 @@ import { getCurrentUser } from '@/utils/getUserFromStorage';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
-import Textarea from '@/components/ui/Textarea';
 
 interface FormData {
   username: string;
@@ -217,6 +217,7 @@ const BookOffline = () => {
         onChangeText={(text: string) => handleInputChange('username', text)}
         placeholder="Enter your name"
         error={errors.username as string}
+        iconName='User'
       />
 
       <Input
@@ -226,6 +227,7 @@ const BookOffline = () => {
         placeholder="Enter your email"
         keyboardType="email-address"
         autoCapitalize="none"
+        iconName='Mail'
         error={errors.email as string}
       />
 
@@ -237,6 +239,7 @@ const BookOffline = () => {
         keyboardType="phone-pad"
         maxLength={10}
         error={errors.mobileNumber as string}
+        iconName='Phone'
       />
 
       <Textarea
@@ -252,11 +255,10 @@ const BookOffline = () => {
   );
 
   const renderStep2 = () => (
-    <View className="space-y-4">
-      <Text className="text-lg font-semibold mb-4">Requirements</Text>
+    <View className="space-y-1 gap-2">
+      <Text className="text-lg font-semibold mb-1">Requirements</Text>
 
       <View>
-        <Text className="text-sm font-medium mb-1">Board (Select multiple)</Text>
         <GenericMultiSelect
           iconName="School"
           label="Board"
@@ -268,12 +270,11 @@ const BookOffline = () => {
           onOpenChange={(open) => setOpenDropdown(open ? 'boards' : null)}
         />
         {errors.boards && (
-          <Text className="text-red-500 text-xs mt-1">{errors.boards}</Text>
+          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.boards}</Text>
         )}
       </View>
 
       <View>
-        <Text className="text-sm font-medium mb-1">Classes (Select multiple)</Text>
         <GenericMultiSelect
           iconName="BookOpen"
           label="Classes"
@@ -285,12 +286,11 @@ const BookOffline = () => {
           onOpenChange={(open) => setOpenDropdown(open ? 'classes' : null)}
         />
         {errors.classes && (
-          <Text className="text-red-500 text-xs mt-1">{errors.classes}</Text>
+          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.classes}</Text>
         )}
       </View>
 
       <View>
-        <Text className="text-sm font-medium mb-1">Subjects (Select multiple)</Text>
         <GenericMultiSelect
           iconName="BookOpenText"
           label="Subjects"
@@ -302,41 +302,39 @@ const BookOffline = () => {
           onOpenChange={(open) => setOpenDropdown(open ? 'subjects' : null)}
         />
         {errors.subjects && (
-          <Text className="text-red-500 text-xs mt-1">{errors.subjects}</Text>
+          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.subjects}</Text>
         )}
       </View>
 
       <View>
-        <Text className="text-sm font-medium mb-1">Teaching Language</Text>
         <GenericMultiSelect
           iconName="Languages"
-          label="Language"
+          label="Teaching Language"
           placeholder="Select language"
           options={LANGUAGE_OPTIONS.map((o: any) => o.label)}
           value={formData.teachingLanguage ? [formData.teachingLanguage] : []}
-          onChange={(values) => handleInputChange('teachingLanguage', values[0] || '')}
+          onChange={(values) => handleMultiSelect('teachingLanguage', values)}
           open={openDropdown === 'language'}
           onOpenChange={(open) => setOpenDropdown(open ? 'language' : null)}
         />
         {errors.teachingLanguage && (
-          <Text className="text-red-500 text-xs mt-1">{errors.teachingLanguage}</Text>
+          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.teachingLanguage}</Text>
         )}
       </View>
 
       <View>
-        <Text className="text-sm font-medium mb-1">Teaching Section</Text>
         <GenericMultiSelect
           iconName="LayoutGrid"
-          label="Section"
+          label="Available Section"
           placeholder="Select section"
           options={SECTION_OPTIONS.map((o: any) => o.label)}
           value={formData.teachingSection ? [formData.teachingSection] : []}
-          onChange={(values) => handleInputChange('teachingSection', values[0] || '')}
+          onChange={(values) => handleMultiSelect('teachingSection', values)}
           open={openDropdown === 'section'}
           onOpenChange={(open) => setOpenDropdown(open ? 'section' : null)}
         />
         {errors.teachingSection && (
-          <Text className="text-red-500 text-xs mt-1">{errors.teachingSection}</Text>
+          <Text className="text-red-500 text-xs -mt-1">{errors.teachingSection}</Text>
         )}
       </View>
     </View>
@@ -363,7 +361,7 @@ const BookOffline = () => {
         </View>
       </View>
 
-      <View className="flex-row space-x-4">
+      <View className="flex-row space-x-4 gap-2">
         <View className="flex-1">
           <Input
             label="Minimum Price"
@@ -371,6 +369,7 @@ const BookOffline = () => {
             onChangeText={(text: string) => handleInputChange('minPrice', text.replace(/[^0-9]/g, ''))}
             placeholder="Min"
             keyboardType="numeric"
+            iconName="IndianRupee"
           />
         </View>
         <View className="flex-1">
@@ -380,6 +379,7 @@ const BookOffline = () => {
             onChangeText={(text: string) => handleInputChange('maxPrice', text.replace(/[^0-9]/g, ''))}
             placeholder="Max"
             keyboardType="numeric"
+            iconName="IndianRupee"
           />
         </View>
       </View>
@@ -421,8 +421,22 @@ const BookOffline = () => {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    loadUserData().finally(() => setRefreshing(false));
-  }, [loadUserData]);
+    Alert.alert(
+      'Reset Form',
+      'Are you sure you want to reset the form? All your changes will be lost.',
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => setRefreshing(false) },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: () => {
+            resetForm();
+            loadUserData().finally(() => setRefreshing(false));
+          }
+        }
+      ]
+    );
+  }, [loadUserData, resetForm]);
 
   if (isLoading) {
     return (
@@ -461,33 +475,22 @@ const BookOffline = () => {
         <View className="flex-row justify-between mt-6">
 
           <View className="flex-row space-x-2 items-center justify-center w-full">
+            {currentStep > 1 && (
+              <Button
+                title="Back"
+                onPress={prevStep}
+                outline={true}
+                className="w-[40%]"
+                icon="arrow-left"  // Changed from "ArrowLeft"
+              />
+
+            )}
             <Button
-              title="Reset"
-              onPress={() => {
-                Alert.alert(
-                  'Reset Form',
-                  'Are you sure you want to reset the form? All your changes will be lost.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Reset',
-                      style: 'destructive',
-                      onPress: () => {
-                        resetForm();
-                        setCurrentStep(1);
-                      }
-                    }
-                  ]
-                );
-              }}
-              outline={true}
-              className="w-[40%]"
-            />
-            <Button
-              title={currentStep === 3 ? 'Submit Enquiry' : 'Next'}
+              title={currentStep === 3 ? 'Submit' : 'Next'}
               onPress={nextStep}
               loading={isSubmitting}
               className="w-[40%]"
+              icon={currentStep === 3 ? 'send' : 'arrow-right'}  // Changed from 'Send'/'ArrowRight'
             />
           </View>
         </View>

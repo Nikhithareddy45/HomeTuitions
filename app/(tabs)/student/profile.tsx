@@ -2,10 +2,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { LogOut, Pencil, X } from 'lucide-react-native';
+import { Pencil, X } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 
+import AddressForm from '@/components/AddressComp';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { GetProfileAPI, UpdateStudentAPI } from '@/services/user';
@@ -33,35 +44,44 @@ interface UserData {
 
 const UserProfile: React.FC = () => {
   const router = useRouter();
+
   const [userData, setUserData] = useState<UserData | null>(null);
   const [editedData, setEditedData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [imageUri, setImageUri] = useState<string | null>(null);
 
+  // 🔹 Load profile (SAFE)
   const loadUserProfile = useCallback(async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const currentUser = await getCurrentUser();
-      if (!currentUser) {
+
+      if (!currentUser?.id) {
         Alert.alert('Error', 'User not found, please login again.');
         return;
       }
 
-      const data = await GetProfileAPI(currentUser.id.toString());
+      const data = await GetProfileAPI(String(currentUser.id));
       setUserData(data);
-      setEditedData(data);
-      setImageUri(data.profile_image || null);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load profile data.';
-      Alert.alert('Error', errorMessage);
+
+      // ⚠️ Only initialize editedData ONCE
+      setEditedData(prev => (prev ? prev : data));
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'Failed to load profile');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { loadUserProfile(); }, [loadUserProfile]));
+  // 🔹 DO NOT reload while editing
+  useFocusEffect(
+    useCallback(() => {
+      if (!isEditing) {
+        loadUserProfile();
+      }
+    }, [loadUserProfile, isEditing])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -69,61 +89,47 @@ const UserProfile: React.FC = () => {
     setRefreshing(false);
   }, [loadUserProfile]);
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Please grant access to your photo library.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
+  // 🔹 Save profile
   const handleSave = async () => {
     if (!editedData) return;
+
     try {
+      setLoading(true);
       const currentUser = await getCurrentUser();
-      console.log(currentUser )
+
       if (!currentUser?.id) {
-        Alert.alert('Error', 'User not found, please login again.');
+        Alert.alert('Error', 'User not found');
         return;
       }
-       const payload = {
-        userid:currentUser.id,
+
+      const payload = {
+        userid: currentUser.id,
         username: editedData.username,
         mobile_number: editedData.mobile_number,
         date_of_birth: editedData.date_of_birth,
         student_class: editedData.student_class,
-        // password: editedData.password,
-        // confirm_password: formData.confirm_password,
         address: {
-          street: editedData.address?.street,
-          city: editedData.address?.city,
-          state: editedData.address?.state,
-          pin_code: editedData.address?.pin_code,
-          country: editedData.address?.country,
+          street: editedData.address?.street || '',
+          city: editedData.address?.city || '',
+          state: editedData.address?.state || '',
+          pin_code: editedData.address?.pin_code || '',
+          country: editedData.address?.country || '',
         },
       };
-      setLoading(true);
+
+      console.log('FINAL PAYLOAD:', payload.address);
+
       const updatedUser = await UpdateStudentAPI(payload, String(currentUser.id));
+
       setUserData(updatedUser);
       setEditedData(updatedUser);
-      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
       setUserCache(updatedUser);
+
       setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error: any) {
-      console.error('Save error:', error?.response?.data || error);
-      Alert.alert('Error', error?.response?.data?.message || JSON.stringify(error?.response?.data) || error?.message || 'Failed to update profile');
+      Alert.alert('Success', 'Profile updated successfully');
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.message || 'Update failed');
     } finally {
       setLoading(false);
     }
@@ -131,12 +137,11 @@ const UserProfile: React.FC = () => {
 
   const handleCancel = () => {
     setEditedData(userData);
-    setImageUri(userData?.profile_image || null);
     setIsEditing(false);
   };
 
   const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
+    Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
@@ -144,7 +149,7 @@ const UserProfile: React.FC = () => {
         onPress: async () => {
           await AsyncStorage.clear();
           setUserCache(null);
-          router.replace({ pathname: '/(auth)/login', params: { role: 'student' } });
+          router.replace('/(auth)/login');
         },
       },
     ]);
@@ -152,7 +157,7 @@ const UserProfile: React.FC = () => {
 
   if (loading && !userData) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center">
+      <SafeAreaView className="flex-1 items-center justify-center">
         <Text>Loading...</Text>
       </SafeAreaView>
     );
@@ -164,119 +169,72 @@ const UserProfile: React.FC = () => {
       className="flex-1 bg-gray-50"
     >
       <ScrollView
-        className="flex-1"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} 
-         />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <View className="pt-5 pb-24">
-          <View className="flex-row items-center justify-between px-4">
-            <View />
-            <Text className="text-white text-xl font-bold">My Profile</Text>
+        <View className="px-4 mt-4 gap-4">
+          {/* Header */}
+          <View className="flex-row justify-between items-center">
+            <Text className="text-xl font-bold">My Profile</Text>
             <Pressable onPress={() => (isEditing ? handleCancel() : setIsEditing(true))}>
-              <View className="w-9 h-9 bg-white/20 rounded-full items-center justify-center">
-                {isEditing ? <X size={18} color="red" /> : <Pencil size={18} color="black" />}
-              </View>
+              {isEditing ? <X size={20} color="red" /> : <Pencil size={20} />}
             </Pressable>
           </View>
 
-          {/* Profile Image */}
-          {/* <View className="items-center mt-4">
-            <View className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white">
-              {imageUri ? (
-                <Image
-                  source={{ uri: imageUri }}
-                  style={{ width: '100%', height: '100%' }}
-                  contentFit="cover"
-                />
-              ) : (
-                <View className="w-full h-full bg-primary/10 items-center justify-center">
-                  <User size={40} color="#337ab7" />
-                </View>
-              )}
-              {isEditing && (
-                <Pressable
-                  onPress={pickImage}
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-center justify-center border-2 border-white"
-                >
-                  <Camera size={14} color="white" />
-                </Pressable>
-              )}
-            </View>
-            <Text className="text-white text-lg mt-2">{editedData?.username}</Text>
-            <Text className="text-white/80">{editedData?.role}</Text>
-          </View> */}
-        </View>
-
-        {/* Form */}
-        <View className="-mt-16 px-4 ">
-          {/* Username & Email */}
-          <View className="bg-white rounded-xl p-4 mb-4">
+          {/* Personal Info */}
+          <View className="bg-white p-4 rounded-xl">
             <Input
               label="Username"
               value={editedData?.username || ''}
-              onChangeText={(text) => setEditedData(prev => prev ? { ...prev, username: text } : prev)}
-              placeholder="Enter username"
               editable={isEditing}
-              iconName="User"
+              onChangeText={t =>
+                setEditedData(p => (p ? { ...p, username: t } : p))
+              }
             />
+
             <Input
               label="Email"
               value={editedData?.email || ''}
-              onChangeText={(text) => setEditedData(prev => prev ? { ...prev, email: text } : prev)}
-              placeholder="Enter email"
-              editable={isEditing}
-              iconName="Mail"
+              editable={false}
             />
+
             <Input
               label="Mobile Number"
               value={editedData?.mobile_number || ''}
-              onChangeText={(text) => setEditedData(prev => prev ? { ...prev, mobile_number: text } : prev)}
-              placeholder="Enter mobile number"
               editable={isEditing}
-              iconName="Phone"
+              onChangeText={t =>
+                setEditedData(p => (p ? { ...p, mobile_number: t } : p))
+              }
             />
           </View>
 
           {/* Address */}
-          {editedData?.address && (
-            <View className="bg-white rounded-xl p-4 mb-4 s">
-              {['street', 'city', 'state', 'pin_code', 'country'].map(field => (
-                <View key={field} className="mb-3">
-                  <Input
-                    label={field.charAt(0).toUpperCase() + field.slice(1)}
-                    value={editedData.address?.[field as keyof Address] || ''}
-                    onChangeText={(text) =>
-                      setEditedData(prev => prev ? { ...prev, address: { ...prev.address!, [field]: text } } : prev)
-                    }
-                    placeholder={`Enter ${field}`}
-                    editable={isEditing}
-                    iconName={field === 'street' ? 'MapPin' : undefined}
-                  />
-                </View>
-              ))}
-            </View>
-          )}
+          <View className="bg-white p-4 rounded-xl">
+            {editedData?.address ? (
+              <AddressForm
+                address={editedData.address}
+                editable={isEditing}
+                selectedLocation={null}
+                onLocationChange={() => {}}
+                onChange={addr =>
+                  setEditedData(p =>
+                    p ? { ...p, address: addr } : p
+                  )
+                }
+              />
+            ) : (
+              <Text>No address added</Text>
+            )}
+          </View>
 
           {/* Buttons */}
           {isEditing ? (
-            <View className="mb-4">
-              <Button
-                title="Save Changes"
-                onPress={handleSave}
-                className="bg-primary mb-3 rounded-xl"
-                icon="Check"
-              />
-              <Pressable onPress={handleCancel} className="bg-gray-100 py-4 rounded-xl items-center flex-row justify-center">
-                <X size={18} color="#666" />
-                <Text className="ml-2 text-gray-600">Cancel</Text>
-              </Pressable>
-            </View>
+            <>
+              <Button title="Save Changes" onPress={handleSave} />
+              <Button title="Cancel" outline onPress={handleCancel} />
+            </>
           ) : (
-            <Pressable onPress={handleLogout} className="bg-white rounded-xl mb-4 flex-row items-center p-4 shadow">
-              <LogOut size={20} color="#ef4444" />
-              <Text className="ml-3 text-red-500 font-bold flex-1">Logout</Text>
-            </Pressable>
+            <Button title="Logout" outline onPress={handleLogout} />
           )}
         </View>
       </ScrollView>

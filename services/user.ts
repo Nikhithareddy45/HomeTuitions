@@ -29,6 +29,6 @@ export const UpdateStudentAPI = async (userData: any, userId: string): Promise<a
   console.log(config)
 
   const response = await axios.patch(`${base_url}/api/users/v1/users/${userId}/`, userData, config);
-  console.log(response.data)
+  console.log("Response",response.data)
   return response.data;
 };

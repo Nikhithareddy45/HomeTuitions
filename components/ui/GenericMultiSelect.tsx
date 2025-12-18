@@ -90,8 +90,8 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
   };
 
   return (
-    <View ref={containerRef} className="w-full relative mb-2 ">
-      <View className='flex-row items-center gap-3 mb-4'>
+    <View ref={containerRef} className="w-full relative py-2">
+      <View className='flex-row items-center gap-2 mb-2'>
         {iconName && <Icon name={iconName} size={18} />}
         {label && <Text className="text-md font-bold text-primary">{label}</Text>}
       </View>
@@ -100,7 +100,7 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={toggleOpen}
-        className="w-full px-3 py-3  bg-white flex-row items-center justify-between"
+        className="w-full px-3 py-3  bg-white flex-row items-center justify-between rounded-xl border-2 border-gray-300"
       >
         <Text
           className={`text-md ${value.length ? 'text-slate-900' : 'text-gray-400'}`}
@@ -124,10 +124,10 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
           <View className="absolute z-20 top-full left-0 right-0 bg-white-900 overflow-scroll">
 
             {/* Search / add input */}
-            <View className="border-b border-gray-200 p-2">
+            <View className="p-2">
               <TextInput
                 className="
-                  w-full px-3 py-2 text-md rounded-xl border border-gray-300
+                  w-full px-3 py-2 text-md rounded-xl border-2 border-gray-300
                   bg-white text-slate-900
                 "
                 placeholder="Search or add..."
@@ -180,7 +180,7 @@ const GenericMultiSelect: React.FC<UpdatedMultiSelectProps> = ({
                 className="px-3 py-2 bg-gray-50 active:bg-gray-100"
               >
                 <Text className="text-sm text-primary">
-                  Add &quot{search.trim()}&quot
+                  Add {search.trim()}
                 </Text>
               </Pressable>
             )}

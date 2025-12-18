@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
 interface ButtonProps {

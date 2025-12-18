@@ -8,7 +8,11 @@ import { GetAllTutorData } from '@/types/tutor';
 import { useRouter } from 'expo-router';
 import { FunnelPlus } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View, Image, Alert } from 'react-native';
+import { Images } from '@/constants/images';
+import { LogOut, Bell } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {  setUserCache } from '@/utils/getUserFromStorage';
 
 // Filter function (NO location)
 const applyFilters = (tutors: GetAllTutorData[], filters: Record<string, string[]>, query: string) => {
@@ -121,8 +125,44 @@ const Search = () => {
     return applyFilters(tutors, appliedFilters, query);
   }, [tutors, appliedFilters, query]);
 
+const handleLogout = async () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          await AsyncStorage.clear();
+          setUserCache(null);
+          router.replace({ pathname: '/(auth)/login', params: { role: 'student' } });
+        },
+      },
+    ]);
+  };
+
+const handleNotifications = () => {
+    router.push('/sections/Notifications');
+  };
   return (
     <View className="flex-1 bg-gray-50 px-4 pt-4 gap-1">
+      <View className="rounded-full flex-row items-center justify-between mx-4 my-2 ">
+        <View className="flex-row items-center gap-2">
+          <Image
+            source={Images.Logo}
+            className="w-12 h-12 rounded-full"
+            resizeMode="contain"
+          />
+          <Text className="text-lg font-bold">Home Tuitions</Text>
+        </View>
+        <View className="flex-row items-center gap-3">
+           <Pressable onPress={handleLogout}>
+            <Bell color="#2673d6ff"/>
+          </Pressable>
+          <Pressable onPress={handleNotifications}>
+            <LogOut color="#e05555ff"/>
+          </Pressable>         
+        </View>
+      </View>
       <View className="items-center flex-row justify-center">
         <SearchBar
           value={query}
