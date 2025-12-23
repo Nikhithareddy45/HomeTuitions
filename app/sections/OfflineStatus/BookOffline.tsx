@@ -9,6 +9,7 @@ import TimePicker from '@/components/ui/TimePicker';
 import { board_options as BOARD_OPTIONS, class_options as CLASS_OPTIONS, language_options as LANGUAGE_OPTIONS, section_options as SECTION_OPTIONS, subject_options as SUBJECT_OPTIONS } from '@/constants/constants';
 import { sendEnquiryAPI } from '@/services/enquiry';
 import { useRefreshStore } from '@/store/useRefreshStore';
+import { EnquiryData } from '@/types/enquiry';
 import { getCurrentUser } from '@/utils/getUserFromStorage';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -17,36 +18,36 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, View } from
 interface FormData {
   username: string;
   email: string;
-  mobileNumber: string;
-  address: string;
-  boards: string[];
+  mobile_number: string;
+  home_address: string;
+  board: string[];
   classes: string[];
   subjects: string[];
-  teachingLanguage: string;
-  teachingSection: string;
-  startTime: string;
-  endTime: string;
-  minPrice: string;
-  maxPrice: string;
-  additionalMessage: string;
+  teaching_language: string;
+  teaching_section: string;
+  teaching_starttime: string;
+  teaching_endtime: string;
+  minimum_price: string;
+  maximum_price: string;
+  message: string;
   [key: string]: any;
 }
 
 const initialFormData: FormData = {
   username: '',
   email: '',
-  mobileNumber: '',
-  address: '',
-  boards: [],
+  mobile_number: '',
+  home_address: '',
+  board: [],
   classes: [],
   subjects: [],
-  teachingLanguage: '',
-  teachingSection: '',
-  startTime: '',
-  endTime: '',
-  minPrice: '',
-  maxPrice: '',
-  additionalMessage: ''
+  teaching_language: '',
+  teaching_section: '',
+  teaching_starttime: '',
+  teaching_endtime: '',
+  minimum_price: '',
+  maximum_price: '',
+  message: ''
 };
 
 const BookOffline = () => {
@@ -69,12 +70,12 @@ const BookOffline = () => {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    if (!formData.mobileNumber) {
-      newErrors.mobileNumber = 'Mobile number is required';
-    } else if (!/^\d{10}$/.test(formData.mobileNumber)) {
-      newErrors.mobileNumber = 'Invalid mobile number';
+    if (!formData.mobile_number) {
+      newErrors.mobile_number = 'Mobile number is required';
+    } else if (!/^\d{10}$/.test(formData.mobile_number)) {
+      newErrors.mobile_number = 'Invalid mobile number';
     }
-    if (!formData.address) newErrors.address = 'Address is required';
+    if (!formData.home_address) newErrors.home_address = 'Address is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -82,11 +83,11 @@ const BookOffline = () => {
 
   const validateStep2 = () => {
     const newErrors: Record<string, string | string[]> = {};
-    if (formData.boards.length === 0) newErrors.boards = 'Please select at least one board';
+    if (formData.board.length === 0) newErrors.board = 'Please select at least one board';
     if (formData.classes.length === 0) newErrors.classes = 'Please select at least one class';
     if (formData.subjects.length === 0) newErrors.subjects = 'Please select at least one subject';
-    if (!formData.teachingLanguage) newErrors.teachingLanguage = 'Please select teaching language';
-    if (!formData.teachingSection) newErrors.teachingSection = 'Please select teaching section';
+    if (!formData.teaching_language) newErrors.teaching_language = 'Please select teaching language';
+    if (!formData.teaching_section) newErrors.teaching_section = 'Please select teaching section';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -107,8 +108,8 @@ const BookOffline = () => {
           ...prev,
           username: currentUser.username || '',
           email: currentUser.email || '',
-          mobileNumber: currentUser.mobile_number || '',
-          address: currentUser.address?.formatted_address || ''
+          mobile_number: currentUser.mobile_number || '',
+          home_address: currentUser.home_address?.formatted_address || ''
         }));
       }
     } catch (error) {
@@ -122,46 +123,57 @@ const BookOffline = () => {
     loadUserData();
   }, [loadUserData, refreshToken]);
 
-  const handleSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-      setSubmitError(null);
+ const handleSubmit = async () => {
+  try {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    const enquiryData = {
+      username: formData.username,
+      email: formData.email,
+      mobile_number: formData.mobile_number,
+      home_address: formData.home_address,
 
-      const response = await sendEnquiryAPI(formData);
+      board: formData.board,
+      classes: formData.classes,
+      subjects: formData.subjects,
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit enquiry. Please try again.');
-      }
-      if (response.ok) {
-        // Trigger refresh in parent components
-        triggerRefresh();
+      teaching_language: formData.teaching_language,
+      teaching_section: formData.teaching_section,
+      teaching_starttime: formData.teaching_starttime,
+      teaching_endtime: formData.teaching_endtime,
 
-        // Show success message before redirecting
-        Alert.alert(
-          'Success',
-          'Your enquiry has been submitted successfully!',
-          [{
-            text: 'OK',
-            onPress: () => {
-              resetForm();
-              router.push("/(tabs)/student/enquiry");
-            }
-          }]
-        );
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit enquiry. Please try again.');
-      }
-    } catch (error) {
-      console.error('Enquiry submission error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      setSubmitError(errorMessage);
-      Alert.alert('Error', errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      minimum_price: formData.minimum_price,
+      maximum_price: formData.maximum_price,
+      message: formData.message,
+    };
+
+    const response = await sendEnquiryAPI(enquiryData);
+
+    triggerRefresh();
+    Alert.alert(
+      'Success',
+      'Your enquiry has been submitted successfully!',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            resetForm();
+            router.push('/(tabs)/student/enquiry');
+          },
+        },
+      ]
+    );
+  } catch (error) {
+    console.error('Enquiry submission error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'An unexpected error occurred';
+    setSubmitError(errorMessage);
+    Alert.alert('Error', errorMessage);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const nextStep = () => {
     if (currentStep === 1 && !validateStep1()) return;
@@ -185,7 +197,6 @@ const BookOffline = () => {
       [field]: value
     }));
 
-    // Only update errors if the field has an error
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -233,21 +244,21 @@ const BookOffline = () => {
 
       <Input
         label="Mobile Number"
-        value={formData.mobileNumber}
-        onChangeText={(text: string) => handleInputChange('mobileNumber', text)}
+        value={formData.mobile_number}
+        onChangeText={(text: string) => handleInputChange('mobile_number', text)}
         placeholder="Enter your mobile number"
         keyboardType="phone-pad"
         maxLength={10}
-        error={errors.mobileNumber as string}
+        error={errors.mobile_number as string}
         iconName='Phone'
       />
 
       <Textarea
         label="Home Address"
-        value={formData.address}
-        onChangeText={(text: string) => handleInputChange('address', text)}
-        placeholder="Enter your full address"
-        error={errors.address as string}
+        value={formData.home_address}
+        onChangeText={(text: string) => handleInputChange('home_address', text)}
+        placeholder="Enter your full home_address"
+        error={errors.home_address as string}
         iconName="Home"
         className="mb-4"
       />
@@ -264,13 +275,13 @@ const BookOffline = () => {
           label="Board"
           placeholder="Select board"
           options={BOARD_OPTIONS.map((o: any) => o.label)}
-          value={formData.boards}
-          onChange={(values) => handleMultiSelect('boards', values)}
-          open={openDropdown === 'boards'}
-          onOpenChange={(open) => setOpenDropdown(open ? 'boards' : null)}
+          value={formData.board}
+          onChange={(values) => handleMultiSelect('board', values)}
+          open={openDropdown === 'board'}
+          onOpenChange={(open) => setOpenDropdown(open ? 'board' : null)}
         />
-        {errors.boards && (
-          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.boards}</Text>
+        {errors.board && (
+          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.board}</Text>
         )}
       </View>
 
@@ -312,13 +323,13 @@ const BookOffline = () => {
           label="Teaching Language"
           placeholder="Select language"
           options={LANGUAGE_OPTIONS.map((o: any) => o.label)}
-          value={formData.teachingLanguage ? [formData.teachingLanguage] : []}
-          onChange={(values) => handleMultiSelect('teachingLanguage', values)}
+          value={formData.teaching_language ? [formData.teaching_language] : []}
+          onChange={(values) => handleInputChange('teaching_language', values[0])}
           open={openDropdown === 'language'}
           onOpenChange={(open) => setOpenDropdown(open ? 'language' : null)}
         />
-        {errors.teachingLanguage && (
-          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.teachingLanguage}</Text>
+        {errors.teaching_language && (
+          <Text className="text-red-500 text-xs -mt-1 mb-1">{errors.teaching_language}</Text>
         )}
       </View>
 
@@ -328,13 +339,13 @@ const BookOffline = () => {
           label="Available Section"
           placeholder="Select section"
           options={SECTION_OPTIONS.map((o: any) => o.label)}
-          value={formData.teachingSection ? [formData.teachingSection] : []}
-          onChange={(values) => handleMultiSelect('teachingSection', values)}
+          value={formData.teaching_section ? [formData.teaching_section] : []}
+          onChange={(values) => handleInputChange('teaching_section', values[0])}
           open={openDropdown === 'section'}
           onOpenChange={(open) => setOpenDropdown(open ? 'section' : null)}
         />
-        {errors.teachingSection && (
-          <Text className="text-red-500 text-xs -mt-1">{errors.teachingSection}</Text>
+        {errors.teaching_section && (
+          <Text className="text-red-500 text-xs -mt-1">{errors.teaching_section}</Text>
         )}
       </View>
     </View>
@@ -348,15 +359,15 @@ const BookOffline = () => {
         <View className="flex-1">
           <TimePicker
             label="Start Time"
-            value={formData.startTime}
-            onChange={(time: string) => handleInputChange('startTime', time)}
+            value={formData.teaching_starttime}
+            onChange={(time: string) => handleInputChange('teaching_starttime', time)}
           />
         </View>
         <View className="flex-1">
           <TimePicker
             label="End Time"
-            value={formData.endTime}
-            onChange={(time: string) => handleInputChange('endTime', time)}
+            value={formData.teaching_endtime}
+            onChange={(time: string) => handleInputChange('teaching_endtime', time)}
           />
         </View>
       </View>
@@ -365,8 +376,8 @@ const BookOffline = () => {
         <View className="flex-1">
           <Input
             label="Minimum Price"
-            value={formData.minPrice}
-            onChangeText={(text: string) => handleInputChange('minPrice', text.replace(/[^0-9]/g, ''))}
+            value={formData.minimum_price}
+            onChangeText={(text: string) => handleInputChange('minimum_price', text.replace(/[^0-9]/g, ''))}
             placeholder="Min"
             keyboardType="numeric"
             iconName="IndianRupee"
@@ -375,8 +386,8 @@ const BookOffline = () => {
         <View className="flex-1">
           <Input
             label="Maximum Price"
-            value={formData.maxPrice}
-            onChangeText={(text: string) => handleInputChange('maxPrice', text.replace(/[^0-9]/g, ''))}
+            value={formData.maximum_price}
+            onChangeText={(text: string) => handleInputChange('maximum_price', text.replace(/[^0-9]/g, ''))}
             placeholder="Max"
             keyboardType="numeric"
             iconName="IndianRupee"
@@ -386,8 +397,8 @@ const BookOffline = () => {
 
       <Textarea
         label="Additional Message"
-        value={formData.additionalMessage}
-        onChangeText={(text: string) => handleInputChange('additionalMessage', text)}
+        value={formData.message}
+        onChangeText={(text: string) => handleInputChange('message', text)}
         placeholder="Any additional requirements or notes"
         iconName="MessageCircle"
         className="mb-4"

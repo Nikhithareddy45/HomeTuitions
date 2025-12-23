@@ -35,13 +35,8 @@ export const getMyEnquiriesAPI = async (): Promise<any> => {
     
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError;
-      
-      // Handle 401 Unauthorized
       if (axiosError.response?.status === 401) {
-        console.log("Session expired. Redirecting to login...");
-        // Clear any existing auth state
         await AsyncStorage.removeItem("token");
-        // Redirect to login
         router.replace("/(auth)/login");
       }
       
@@ -70,6 +65,7 @@ export const sendEnquiryAPI = async (data: EnquiryData): Promise<any> => {
       data,
       config
     );
+    console.log("Offline api data",response.data)
     return response.data;
   } catch (error: any) {
     console.log("API error response:", error);

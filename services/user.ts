@@ -15,20 +15,23 @@ export const GetProfileAPI = async (userId: string): Promise<any> => {
   return response.data;
 };
 
-export const UpdateStudentAPI = async (userData: any, userId: string): Promise<any> => {
+export const UpdateStudentAPI = async (
+  userData: any,
+  userId: string
+): Promise<any> => {
   const token = await getTokenFromStorage();
-  
-  if (!token) throw new Error("No token found");
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    withCredentials: true,
-  };
-  console.log(config)
+  if (!token) throw new Error('No token found');
 
-  const response = await axios.patch(`${base_url}/api/users/v1/users/${userId}/`, userData, config);
-  console.log("Response",response.data)
+  const response = await axios.patch(
+    `${base_url}/api/users/v1/users/${userId}/`,
+    userData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
   return response.data;
 };

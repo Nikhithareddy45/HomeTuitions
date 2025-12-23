@@ -1,4 +1,4 @@
-// app/(tabs)/enquiry.tsx
+
 import EnquiryRequestCard from '@/components/EnquiryCard';
 import { BackButton } from '@/components/ui/BackButton';
 import { getMyEnquiriesAPI } from '@/services/enquiry';
@@ -116,7 +116,6 @@ const EnquiryTabScreen = () => {
                 data={item}
                 onPress={() =>
                   router.push(`/sections/OfflineStatus/${item.id}`)
-                  // router.push('/')
                 }
               />
             )}
