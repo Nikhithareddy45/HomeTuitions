@@ -36,9 +36,9 @@ const TutorCard = ({ tutor }: { tutor: GetAllTutorData }) => {
                     </View>
                 </View>
 
-                <View className="flex-row items-center ml-2">
+                {/* <View className="flex-row items-center ml-2">
                     <Star />
-                </View>
+                </View> */}
             </View>
 
             <Text

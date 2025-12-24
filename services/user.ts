@@ -35,8 +35,6 @@ export const UpdateStudentAPI = async (userData: UserData, userId: string): Prom
 };
 export const AddressAPI = async (userData: any, userId: string): Promise<any> => {
   try {
-    console.log(userData, 'userData');
-    console.log(userId, 'userId');
     const token = await getTokenFromStorage(); 
     
     if (!token) {
@@ -56,8 +54,7 @@ export const AddressAPI = async (userData: any, userId: string): Promise<any> =>
       userData, 
       config
     );
-    
-    console.log('Address update response:', response.data);
+
     return response.data;
   } catch (error: any) {
     console.error("API error response:", error.response?.data);

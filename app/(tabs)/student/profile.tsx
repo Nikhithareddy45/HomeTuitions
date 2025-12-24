@@ -21,7 +21,8 @@ import Input from '@/components/ui/Input';
 import { AddressAPI, GetProfileAPI, UpdateStudentAPI } from '@/services/user';
 import { UserData } from '@/types/authTypes';
 import { getCurrentUser, setUserCache } from '@/utils/getUserFromStorage';
-export interface Address {
+
+interface Address {
   street: string;
   city: string;
   state: string;
@@ -99,8 +100,6 @@ const UserProfile: React.FC = () => {
         Alert.alert('Error', 'User not found');
         return;
       }
-
-      // Update profile if changed
       if (isProfileChanged) {
         const profilePayload = {
           username: editedData.username,
@@ -166,9 +165,7 @@ const UserProfile: React.FC = () => {
 
   if (loading && !userData) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center">
         <Text>Loading...</Text>
-      </SafeAreaView>
     );
   }
 
@@ -246,7 +243,7 @@ const UserProfile: React.FC = () => {
           <View className="bg-white p-4 rounded-xl">
             {editedData?.address ? (
               <AddressForm
-                address={editedData.address}
+                address={editedData.address as Address}
                 editable={isEditing}
                 selectedLocation={null}
                 onLocationChange={() => {}}
