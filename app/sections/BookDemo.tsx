@@ -109,6 +109,7 @@ const BookDemo: React.FC = () => {
         demoDate: formData.demoDate,
         demoTime: formData.demoTime,
       };
+      console.log(payload)
       
       const response = await BookDemoAPI(payload);
       

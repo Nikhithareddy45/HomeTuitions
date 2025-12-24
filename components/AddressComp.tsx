@@ -10,16 +10,15 @@ type Address = {
     state: string;
     pin_code: string;
     country: string;
-};
+}
 
 interface Props {
-    address: Address;
+    address: Address;  // Now using the imported Address type
     onChange: (addr: Address) => void;
     selectedLocation: { lat: number; lng: number } | null;
     onLocationChange: (loc: { lat: number; lng: number } | null) => void;
     editable?: boolean;
 }
-
 const AddressForm: React.FC<Props> = ({
     address,
     onChange,
@@ -28,7 +27,10 @@ const AddressForm: React.FC<Props> = ({
     const [loading, setLoading] = useState(false);
 
     const handleField = (key: keyof Address, value: string) => {
-        onChange({ ...address, [key]: value });
+        onChange({
+            ...address,
+            [key]: value || null  
+        });
     };
 
     const handleUseLocation = async () => {
@@ -69,15 +71,15 @@ const AddressForm: React.FC<Props> = ({
             </View>
 
             <Input
-             label="Street" 
-             value={address.street} 
-             editable={editable} 
-             onChangeText={t => handleField('street', t)} 
-             iconName='MapPin' 
+                label="Street"
+                value={address.street}
+                editable={editable}
+                onChangeText={t => handleField('street', t)}
+                iconName='MapPin'
             />
-            <Input label="City" value={address.city} editable={editable} onChangeText={t => handleField('city', t)}  iconName='MapPin'/>
-            <Input label="Pin Code" value={address.pin_code} editable={editable} onChangeText={t => handleField('pin_code', t)}  iconName='MapPin'/>
-            <Input label="State" value={address.state} editable={editable} onChangeText={t => handleField('state', t)}  iconName='MapPin'/>
+            <Input label="City" value={address.city} editable={editable} onChangeText={t => handleField('city', t)} iconName='MapPin' />
+            <Input label="Pin Code" value={address.pin_code} editable={editable} onChangeText={t => handleField('pin_code', t)} iconName='MapPin' />
+            <Input label="State" value={address.state} editable={editable} onChangeText={t => handleField('state', t)} iconName='MapPin' />
             <Input label="Country" value={address.country} editable={editable} onChangeText={t => handleField('country', t)} iconName='MapPin' />
         </View>
     );

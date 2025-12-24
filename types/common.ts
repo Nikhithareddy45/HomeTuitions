@@ -49,9 +49,9 @@ export interface AvailabilityWindow {
 }
 
 export interface Address {
-  street?: string;
-  city?: string;
-  state?: string;
-  pin_code?: string;
-  country?: string;
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pin_code?: string | null;
+  country?: string | null;
 }

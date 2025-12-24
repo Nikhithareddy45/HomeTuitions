@@ -3,11 +3,10 @@ export interface UserData {
   username: string;
   email: string;
   mobile_number: string;
-  password: string;
-  confirm_password: string;
-  date_of_birth: string;
-  student_class: string;
-  address: Address;
+  date_of_birth?: string | null;
+  student_class?: string | null;
+  profile_image?: string | null;
+  address?: Address | null;
 }
 
 export interface LoginData {

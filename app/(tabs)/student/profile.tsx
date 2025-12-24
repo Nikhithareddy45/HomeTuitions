@@ -18,27 +18,15 @@ import {
 import AddressForm from '@/components/AddressComp';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { GetProfileAPI, UpdateStudentAPI } from '@/services/user';
+import { AddressAPI, GetProfileAPI, UpdateStudentAPI } from '@/services/user';
+import { UserData } from '@/types/authTypes';
 import { getCurrentUser, setUserCache } from '@/utils/getUserFromStorage';
-
-interface Address {
+export interface Address {
   street: string;
   city: string;
   state: string;
   pin_code: string;
   country: string;
-}
-
-interface UserData {
-  id: number;
-  username: string;
-  email: string;
-  mobile_number: string;
-  role: string;
-  date_of_birth?: string;
-  student_class?: string;
-  profile_image?: string;
-  address?: Address;
 }
 
 const UserProfile: React.FC = () => {
@@ -88,7 +76,16 @@ const UserProfile: React.FC = () => {
   const handleSave = async () => {
     if (!editedData || !userData) return;
 
-    if (JSON.stringify(editedData) === JSON.stringify(userData)) {
+    const isProfileChanged =
+      editedData.username !== userData.username ||
+      editedData.mobile_number !== userData.mobile_number ||
+      editedData.date_of_birth !== userData.date_of_birth ||
+      editedData.student_class !== userData.student_class;
+
+    const isAddressChanged =
+      JSON.stringify(editedData.address) !== JSON.stringify(userData.address);
+
+    if (!isProfileChanged && !isAddressChanged) {
       Alert.alert('No changes to save');
       return;
     }
@@ -96,37 +93,51 @@ const UserProfile: React.FC = () => {
     try {
       setLoading(true);
       const currentUser = await getCurrentUser();
-      if (!currentUser?.id) return;
-
-      const payload: any = {
-        username: editedData.username,
-        mobile_number: editedData.mobile_number,
-        date_of_birth: editedData.date_of_birth,
-        student_class: editedData.student_class,
-      };
-
-      if (editedData.address) {
-        payload.address = editedData.address;
+      console.log(currentUser, 'currentUser');
+      console.log(currentUser.id, 'currentUser.id');
+      if (!currentUser?.id) {
+        Alert.alert('Error', 'User not found');
+        return;
       }
 
-      console.log('FINAL PAYLOAD:', payload);
+      // Update profile if changed
+      if (isProfileChanged) {
+        const profilePayload = {
+          username: editedData.username,
+          date_of_birth: editedData.date_of_birth,
+          student_class: editedData.student_class,
+        }as any;
+        
 
-      const updatedUser = await UpdateStudentAPI(
-        payload,
-        String(currentUser.id)
-      );
+        await UpdateStudentAPI(profilePayload, String(currentUser.id));
+      }
 
+      // Update address if changed
+      if (isAddressChanged && editedData.address) {
+        console.log(currentUser.id)
+        const addressPayload = {
+          street: editedData.address.street,
+          city: editedData.address.city,
+          state: editedData.address.state,
+          pin_code: editedData.address.pin_code,
+          country: editedData.address.country,
+        }as any;
+        await AddressAPI(addressPayload, String(currentUser.id));
+      }
+
+      // Refresh user data
+      const updatedUser = await GetProfileAPI(String(currentUser.id));
       setUserData(updatedUser);
       setEditedData(updatedUser);
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-      setUserCache(updatedUser);
+      await setUserCache(updatedUser);
 
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully');
     } catch (e: any) {
+      console.error('Update error:', e);
       Alert.alert(
         'Error',
-        e?.response?.data?.message || 'Update failed'
+        e?.response?.data?.message || 'Failed to update profile. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -205,7 +216,7 @@ const UserProfile: React.FC = () => {
               iconName="Mail"
             />
 
-            <Input
+            {/* <Input
               label="Mobile Number"
               value={editedData?.mobile_number || ''}
               editable={isEditing}
@@ -215,7 +226,20 @@ const UserProfile: React.FC = () => {
                   p ? { ...p, mobile_number: t } : p
                 )
               }
-            />
+                
+            /> */}
+             <Input
+              label="Student Class"
+              value={editedData?.student_class || ''}
+              editable={isEditing}
+              iconName="Book"
+              onChangeText={t =>
+                setEditedData(p =>
+                  p ? { ...p, student_class: t } : p
+                )
+              }
+                
+            /> 
           </View>
 
           {/* Address */}

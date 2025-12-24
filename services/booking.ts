@@ -25,6 +25,7 @@ export const BookDemoAPI = async ({ tutorId, message, demoDate, demoTime }: Book
       { tutor_id: tutorId, message, demo_date: demoDate, demo_time: demoTime },
       config
     );
+    console.log(response.data)
     return response.data;
   } catch (error: any) {
     console.error("API error response:", error.response?.data);

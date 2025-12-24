@@ -40,12 +40,12 @@ const EnquiryRequestCard: React.FC<Props> = ({ data, onPress }) => {
   const statusStyle = getStatusStyle();
 
   return (
-    // <TouchableOpacity
-    //   onPress={onPress}
-    //   activeOpacity={0.9}
-    //   className="bg-white-900 rounded-xl border border-gray-200 mb-4 overflow-hidden"
-    // >
-      <View className="bg-white-900 rounded-xl border border-gray-200 mb-4 overflow-hidden">
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.9}
+      className="bg-white-900 rounded-xl border border-gray-200 mb-4 overflow-hidden"
+    >
+      {/* <View className="bg-white-900 rounded-xl border border-gray-200 mb-4 overflow-hidden"> */}
         {/* Header */}
         <View className="px-4 py-3 flex-row justify-between items-center border-b border-gray-100">
           <Text className="text-sm font-semibold text-gray-800">
@@ -143,19 +143,8 @@ const EnquiryRequestCard: React.FC<Props> = ({ data, onPress }) => {
             </Text>
           </View>
         </View>
-
-        {/* Footer */}
-        <TouchableOpacity
-          onPress={onPress}
-          className="flex-row items-center justify-center py-3 bg-blue-50 border-t border-blue-100"
-        >
-          <Text className="text-sm font-medium text-blue-600 mr-1">
-            View Status
-          </Text>
-          <ArrowRight size={14} color="#2563eb" />
-        </TouchableOpacity>
-      </View>
-    // </TouchableOpacity>
+        {/* </View> */}
+    </TouchableOpacity>
   );
 };
 
