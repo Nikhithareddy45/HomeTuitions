@@ -6,7 +6,7 @@ import { House, Search, User, Calendar, Bell,SquareArrowOutUpRight } from 'lucid
 export default function UserLayout() {
   const INACTIVE_COLOR = '#313131';
   const ACTIVE_COLOR = '#115bca';
-  const iconSize= 18
+  const iconSize= 20
   const insets = useSafeAreaInsets();
 
   return (
@@ -21,7 +21,7 @@ export default function UserLayout() {
           marginBottom: 20,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: '600',
         },
         tabBarActiveTintColor: ACTIVE_COLOR,

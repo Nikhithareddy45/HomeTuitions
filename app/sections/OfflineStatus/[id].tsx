@@ -1,98 +1,88 @@
-import { BackButton } from "@/components/ui/BackButton";
-import React from "react";
-import { View, Text } from "react-native";
+import React, { useState } from 'react';
+import { View, Text, FlatList } from 'react-native';
+import { EnquiryRound, TutorSelection } from '@/types/enquiry';
+import TutorRow from '@/components/Enquirys/TutorRow';
+import { BackButton } from '@/components/ui/BackButton';
 
-const FLOW_STEPS = [
-  { key: "application_received", label: "Application\nReceived" },
-  { key: "tutors_sent", label: "Tutors\nSent" },
-  { key: "demo_requested", label: "Demo\nRequested" },
-  { key: "demo_completed", label: "Demo\nCompleted" },
-  { key: "tutor_finalized", label: "Tutor\nFinalized" },
-];
+const OfflineEnquiry = () => {
+  const [rounds, setRounds] = useState<EnquiryRound[]>([
+    {
+      round: 1,
+      tutors: Array.from({ length: 5 }).map((_, i) => ({
+        tutorId: i + 1,
+        tutorName: `Tutor ${i + 1}`,
+        checked: false,
+        action: 'pending',
+        status: 'application_received',
+      })),
+    },
+    {
+      round: 2,
+      tutors: [],
+    },
+    {
+      round: 3,
+      tutors: [],
+    },
+  ]);
 
-interface FlowItem {
-  status: string;
-  created?: string;
-  created_at?: string;
-} 
-
-interface Props {
-  flowData: FlowItem[];
-}
-
-const EnquiryFlowStepper: React.FC<Props> = ({ flowData }) => {
-  if (!Array.isArray(flowData) || flowData.length === 0) {
-    return (
-      <View className="m-6 flex-1">
-        <BackButton/>
-        <View className="flex-1 items-center justify-center">
-          <Text className="mb-6 text-sm text-gray-500 text-center">
-        Application flow will appear once processing starts.
-        </Text>
-        </View>
-      </View>
+  const updateTutor = (
+    roundNumber: number,
+    tutorId: number,
+    updates: Partial<TutorSelection>
+  ) => {
+    setRounds(prev =>
+      prev.map(round =>
+        round.round === roundNumber
+          ? {
+              ...round,
+              tutors: round.tutors.map(tutor =>
+                tutor.tutorId === tutorId
+                  ? { ...tutor, ...updates }
+                  : tutor
+              ),
+            }
+          : round
+      )
     );
-  }
-
-  // ✅ Safe timestamp resolver
-  const getTime = (item: FlowItem) =>
-    new Date(item.created_at || item.created || "").getTime();
-
-  // ✅ Sort oldest → newest
-  const sortedFlow = [...flowData].sort(
-    (a, b) => getTime(a) - getTime(b)
-  );
-
-  const lastStatus = sortedFlow[sortedFlow.length - 1]?.status;
-
-  const completedStepIndex = FLOW_STEPS.findIndex(
-    (step) => step.key === lastStatus
-  );
+  };
 
   return (
-    <View className="mb-8">
-      <View className="flex-row items-center justify-between">
-        {FLOW_STEPS.map((step, index) => {
-          const isCompleted = index <= completedStepIndex;
-
-          return (
-            <View key={step.key} className="flex-1 items-center">
-              {/* DOT */}
-              <View
-                className={`w-7 h-7 rounded-full items-center justify-center ${
-                  isCompleted ? "bg-blue-600" : "bg-gray-300"
-                }`}
-              >
-                <Text
-                  className={`text-xs font-bold ${
-                    isCompleted ? "text-white" : "text-gray-600"
-                  }`}
-                >
-                  {index + 1}
-                </Text>
-              </View>
-
-              {/* LABEL */}
-              <Text className="text-xs text-center mt-2 text-gray-700">
-                {step.label}
-              </Text>
-
-              {/* CONNECTOR */}
-              {index !== FLOW_STEPS.length - 1 && (
-                <View
-                  className={`absolute top-3 left-1/2 right-[-50%] h-1 ${
-                    index < completedStepIndex
-                      ? "bg-blue-600"
-                      : "bg-gray-300"
-                  }`}
-                />
-              )}
-            </View>
-          );
-        })}
+    <FlatList
+      data={rounds}
+      style={{ margin: 16 }}
+      keyExtractor={(item) => item.round.toString()}
+      ListHeaderComponent={
+      <View className="mb-6 gap-3 flex-row items-center">
+        <BackButton/>
+        <Text className="text-xl font-bold">Offline Enquiry</Text>
       </View>
-    </View>
+        }
+      renderItem={({ item: round }) => (
+        <View className="mb-6">
+          <Text className="text-lg font-bold mb-3">
+            Round {round.round}
+          </Text>
+
+          {round.tutors.length === 0 ? (
+            <Text className="text-gray-500 italic">
+              No tutors assigned yet
+            </Text>
+          ) : (
+            round.tutors.map(tutor => (
+              <TutorRow
+                key={tutor.tutorId}
+                tutor={tutor}
+                onChange={(updates) =>
+                  updateTutor(round.round, tutor.tutorId, updates)
+                }
+              />
+            ))
+          )}
+        </View>
+      )}
+    />
   );
 };
 
-export default EnquiryFlowStepper;
+export default OfflineEnquiry;

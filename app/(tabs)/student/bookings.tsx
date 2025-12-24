@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
   ActivityIndicator,
-  RefreshControl,
   FlatList,
+  RefreshControl,
+  Text,
+  View,
 } from 'react-native';
 
 import BookingCard from '@/components/Bookings/BookingCard';
@@ -12,8 +12,8 @@ import BookingTabs from '@/components/Bookings/BookingTopTabs';
 import {
   GetMyApplicationsAPI,
   getAcceptedAPI,
-  getRejectedAPI,
   getPendingAPI,
+  getRejectedAPI,
 } from '@/services/booking';
 
 const Bookings = () => {
@@ -54,25 +54,27 @@ const Bookings = () => {
     fetchBookings(activeTab);
   }, [activeTab]);
 
-  const renderBooking = ({ item }: { item: any }) => (
-    <BookingCard
-      application={{
-        username: item.tutor.user.username,
-        email: item.tutor.user.email,
-        mobileNumber: item.tutor.user.mobile_number,
-        address: item.tutor.user.address
-          ? Object.values(item.tutor.user.address)
-              .filter(Boolean)
-              .join(', ')
-          : '',
-        message: item.message,
-        demo_date: item.demo_date,
-        demo_time: item.demo_time,
-        status: item.status,
-        image: item.tutor.image,
-      }}
-    />
-  );
+const renderBooking = ({ item }: { item: any }) => (
+  <BookingCard
+    application={{
+      tutorId: item.tutor.id,
+      username: item.tutor.user.username,
+      email: item.tutor.user.email,
+      mobileNumber: item.tutor.user.mobile_number,
+      address: item.tutor.user.address
+        ? Object.values(item.tutor.user.address)
+            .filter(Boolean)
+            .join(', ')
+        : undefined,
+      message: item.message,
+      demo_date: item.demo_date,
+      demo_time: item.demo_time,
+      status: item.status,
+      image: item.tutor.image,
+    }}
+  />
+);
+
 
   if (loading && !refreshing) {
     return (
@@ -89,7 +91,7 @@ const Bookings = () => {
       keyExtractor={(item) => item.id.toString()}
       renderItem={renderBooking}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}

@@ -10,7 +10,7 @@ interface Props {
 
 const BookingTabs: React.FC<Props> = ({ activeTab, onChange }) => {
   return (
-    <View className="flex-row justify-between mb-4 bg-gray-100 rounded-full p-1">
+    <View className="flex-row justify-between mb-4 bg-gray-300 rounded-full p-1 gap-2">
       {TABS.map(tab => (
         <Pressable
           key={tab}
@@ -20,8 +20,8 @@ const BookingTabs: React.FC<Props> = ({ activeTab, onChange }) => {
           }`}
         >
           <Text
-            className={`text-center text-sm font-medium ${
-              activeTab === tab ? 'text-white' : 'text-gray-600'
+            className={`text-center text-md font-medium ${
+              activeTab === tab ? 'text-white-900' : 'text-gray-600'
             }`}
           >
             {tab}

@@ -1,19 +1,21 @@
-import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { useRouter } from 'expo-router';
 import {
-  Mail,
-  Phone,
-  MessageSquare,
   Calendar,
+  CheckCircle,
   Clock,
   Hourglass,
-  CheckCircle,
-  XCircle,
+  Mail,
   MapPin,
+  MessageSquare,
+  Phone,
+  XCircle,
 } from 'lucide-react-native';
+import React from 'react';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 export interface BookingCardProps {
   application: {
+    tutorId: number;
     username: string;
     email: string;
     mobileNumber: string;
@@ -25,6 +27,7 @@ export interface BookingCardProps {
     image?: string;
   };
 }
+
 
 const BookingCard: React.FC<BookingCardProps> = ({ application }) => {
   const {
@@ -38,51 +41,46 @@ const BookingCard: React.FC<BookingCardProps> = ({ application }) => {
     status,
     image,
   } = application;
-
   const profileImage =
     image ||
     'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg';
 
+  const router = useRouter();
+
   return (
-    <View className="bg-white-900 flex-1 rounded-xl mx-4 mb-4 shadow-sm border-2 border-accent overflow-hidden">
-      {/* Header */}
-      <View className="items-center py-6">
-        <Image
-          source={{ uri: profileImage }}
-          className="w-16 h-16 rounded-full"
-        />
-        <Text className="text-gray-900 text-md font-bold">{username}</Text>
-      </View>
 
-      {/* Content */}
-      <View className="px-6 gap-2">
-        <Row icon={<Mail size={14}/>} text={email} />
-        <Row icon={<Phone size={14} />} text={mobileNumber} />
+    <TouchableOpacity
+      onPress={() =>
+        router.push({
+          pathname: '/sections/tutor/[id]',
+          params: { id: application.tutorId }, // ✅ tutor id
+        })
+      }
+    >
+      <View className="bg-white-900 rounded-xl mx-2 mb-4 border-2 border-white-900 overflow-hidden p-4">
+        <View className="flex-row">
+          {/* Left side - Tutor Profile */}
+          <View className="items-center w-1/4 pr-4 border-gray-100">
+            <Image
+              source={{ uri: profileImage }}
+              className="w-20 h-20 rounded-full mb-2 border-1"
+            />
+          </View>
 
-        {address && (
-          <Row icon={<MapPin size={14}/>} text={address} />
-        )}
+          {/* Right side - Details */}
+          <View className="flex-1 pl-4 gap-1">
+            <Text className="text-gray-900 text-lg my-1 font-bold">{username}</Text>
+            <Row icon={<Mail size={14} />} text={email} />
+            <Row icon={<Phone size={14} />} text={mobileNumber} />
+            {address && <Row icon={<MapPin size={14} />} text={address} isAddress={true} />}
+            {message && <Row icon={<MessageSquare size={14} />} text={message} />}
+            {demo_date && <Row icon={<Calendar size={14} />} text={demo_date} />}
+            {demo_time && <Row icon={<Clock size={14} />} text={demo_time} />}
+          </View>
+        </View>
 
-        {message && (
-          <Row
-            icon={<MessageSquare size={14}/>}
-            text={message}
-          />
-        )}
-
-        {demo_date && (
-          <Row
-            icon={<Calendar size={14}/>}
-            text={demo_date}
-          />
-        )}
-
-        {demo_time && (
-          <Row icon={<Clock size={14} />} text={demo_time} />
-        )}
-
-        {/* Status */}
-        <View className="my-3">
+        {/* Status Bar - Full width below */}
+        <View className="mt-4 pt-3 border-t border-gray-100">
           {status === 'accepted' && (
             <StatusBadge
               icon={<CheckCircle size={16} color="#15803d" />}
@@ -109,16 +107,30 @@ const BookingCard: React.FC<BookingCardProps> = ({ application }) => {
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
-const Row = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
-  <View className="flex-row items-start gap-3">
-    {icon}
-    <Text className="text-xs text-gray-700 flex-1">{text}</Text>
-  </View>
-);
+// Function to remove coordinates from address
+const removeCoordinates = (text: string) => {
+  return text.replace(/\(?[-+]?[0-9]*\.?[0-9]+\s*,\s*[-+]?[0-9]*\.?[0-9]+\)?/g, '').trim();
+};
+
+const Row = ({ icon, text, isAddress = false }: { icon: React.ReactNode; text: string; isAddress?: boolean }) => {
+  const displayText = isAddress ? removeCoordinates(text) : text;
+  return (
+    <View className="flex-row items-start gap-3">
+      {icon}
+      <Text
+        className={`text-sm text-gray-700 flex-1 ${isAddress ? 'line-clamp-2' : ''}`}
+        numberOfLines={isAddress ? 2 : undefined}
+        ellipsizeMode={isAddress ? 'tail' : undefined}
+      >
+        {displayText}
+      </Text>
+    </View>
+  );
+};
 
 const StatusBadge = ({
   icon,
@@ -133,7 +145,7 @@ const StatusBadge = ({
 }) => (
   <View className={`${bg} rounded-full py-2 px-4 flex-row justify-center gap-2`}>
     {icon}
-    <Text className={`${textColor} text-sm font-medium`}>{text}</Text>
+    <Text className={`${textColor} text-md font-medium`}>{text}</Text>
   </View>
 );
 

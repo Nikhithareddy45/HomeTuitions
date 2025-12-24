@@ -109,9 +109,9 @@ const BookDemo: React.FC = () => {
         demoDate: formData.demoDate,
         demoTime: formData.demoTime,
       };
-      console.log(payload)
-      
+      console.log("Frontend payload",payload)
       const response = await BookDemoAPI(payload);
+      console.log("Backend response",response)
       
       if (response.ok) {
         Alert.alert(

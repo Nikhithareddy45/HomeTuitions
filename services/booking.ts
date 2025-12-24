@@ -12,6 +12,7 @@ import { base_url } from "../utils/url";
 export const BookDemoAPI = async ({ tutorId, message, demoDate, demoTime }: BookDemoData): Promise<any> => {
   try {
     const token = await getTokenFromStorage();
+    console.log({ tutorId, message, demoDate, demoTime })
 
     const config = {
       headers: {
@@ -66,6 +67,7 @@ export const getAcceptedAPI = async (): Promise<any> => {
         const response = await axios.get(`${base_url}/api/demoapp/v1/demoapp/?status=accepted`,
           config,
           );
+          
         return response.data;
       } catch (error: any) {
         console.log("API error response:", error);

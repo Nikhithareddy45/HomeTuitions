@@ -1,6 +1,4 @@
-// types/enquiry.ts
 
-export type EnquiryStatus = 'pending' | 'accepted' | 'rejected' | string;
 
 export interface EnquiryAPI {
   id: number;
@@ -20,7 +18,7 @@ export interface EnquiryAPI {
   minimum_price: number;
   maximum_price: number;
   message: string;
-  status: EnquiryStatus;
+  status: TutorAction;
   is_tutor_allocated: boolean;
   tutor_allocated: number | null;
   created: string;
@@ -42,4 +40,26 @@ export interface EnquiryData {
   maxPrice: string;
   additionalMessage: string;
   [key: string]: any;
+}
+
+export type TutorAction = 'accepted' | 'rejected' | 'pending';
+
+export type TutorStatus =
+  | 'application_received'
+  | 'tutor_sent'
+  | 'demo_requested'
+  | 'demo_completed'
+  | 'tutor_finalized';
+
+export interface TutorSelection {
+  tutorId: number;
+  tutorName: string;
+  checked: boolean;
+  action: TutorAction;
+  status: TutorStatus;
+}
+
+export interface EnquiryRound {
+  round: number;
+  tutors: TutorSelection[];
 }

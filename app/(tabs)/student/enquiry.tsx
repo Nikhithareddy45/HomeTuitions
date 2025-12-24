@@ -1,5 +1,5 @@
 
-import EnquiryRequestCard from '@/components/EnquiryCard';
+import EnquiryRequestCard from '@/components/Enquirys/EnquiryCard';
 import { BackButton } from '@/components/ui/BackButton';
 import { getMyEnquiriesAPI } from '@/services/enquiry';
 import { useRefreshStore } from '@/store/useRefreshStore';
