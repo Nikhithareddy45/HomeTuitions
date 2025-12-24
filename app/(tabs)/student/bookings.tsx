@@ -1,27 +1,49 @@
-import { useRefreshStore } from '@/store/useRefreshStore';
-import { Frown } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  RefreshControl,
+  FlatList,
+} from 'react-native';
+
+import BookingCard from '@/components/Bookings/BookingCard';
+import BookingTabs from '@/components/Bookings/BookingTopTabs';
+import {
+  GetMyApplicationsAPI,
+  getAcceptedAPI,
+  getRejectedAPI,
+  getPendingAPI,
+} from '@/services/booking';
 
 const Bookings = () => {
+  const [activeTab, setActiveTab] = useState('All');
+  const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [bookings, setBookings] = useState<any[]>([]);
-  const { refreshToken } = useRefreshStore();
 
-  const loadBookings = async () => {
+  const fetchBookings = async (tab: string) => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call when available
-      // const data = await getBookingsAPI();
-      // setBookings(data);
-      
-      // Simulate API call
-      setTimeout(() => {
-        setBookings([]); // Empty array since we don't have real data yet
-      }, 500);
-    } catch (error) {
-      console.error('Failed to load bookings:', error);
+      let data = [];
+
+      switch (tab) {
+        case 'Accepted':
+          data = await getAcceptedAPI();
+          break;
+        case 'Rejected':
+          data = await getRejectedAPI();
+          break;
+        case 'Pending':
+          data = await getPendingAPI();
+          break;
+        default:
+          data = await GetMyApplicationsAPI();
+      }
+
+      setBookings(data);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -29,58 +51,65 @@ const Bookings = () => {
   };
 
   useEffect(() => {
-    loadBookings();
-  }, [refreshToken]);
+    fetchBookings(activeTab);
+  }, [activeTab]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadBookings();
-  };
+  const renderBooking = ({ item }: { item: any }) => (
+    <BookingCard
+      application={{
+        username: item.tutor.user.username,
+        email: item.tutor.user.email,
+        mobileNumber: item.tutor.user.mobile_number,
+        address: item.tutor.user.address
+          ? Object.values(item.tutor.user.address)
+              .filter(Boolean)
+              .join(', ')
+          : '',
+        message: item.message,
+        demo_date: item.demo_date,
+        demo_time: item.demo_time,
+        status: item.status,
+        image: item.tutor.image,
+      }}
+    />
+  );
 
   if (loading && !refreshing) {
     return (
-      <View className='flex-1 items-center justify-center'>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text className='mt-2 text-gray-600'>Loading bookings...</Text>
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#4f46e5" />
+        <Text className="mt-2 text-gray-500">Loading bookings...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      className='flex-1 bg-white'
-      contentContainerStyle={{ flexGrow: 1 }}
+    <FlatList
+      data={bookings}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={renderBooking}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={['#2563eb']}
-          tintColor='#2563eb'
+          onRefresh={() => fetchBookings(activeTab)}
         />
       }
-    >
-      {bookings.length === 0 ? (
-        <View className='flex-1 items-center justify-center gap-3 p-4'>
-          <Text className='text-2xl font-semibold text-center'>No Bookings Yet</Text>
-          <Frown size={32} color='#6b7280' />
-          <Text className='text-gray-500 text-center'>
-            Your upcoming bookings will appear here
+      ListHeaderComponent={
+        <View>
+          <Text className="text-2xl font-bold text-center my-4">
+            My Bookings
           </Text>
-          <Text className='text-sm text-gray-400 text-center mt-4'>
-            Pull down to refresh
-          </Text>
+          <BookingTabs activeTab={activeTab} onChange={setActiveTab} />
         </View>
-      ) : (
-        <View className='p-4'>
-          {/* Booking items will be rendered here when available */}
-          {bookings.map((booking) => (
-            <View key={booking.id} className='bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100'>
-              {/* Booking card content will go here */}
-            </View>
-          ))}
+      }
+      ListEmptyComponent={
+        <View className="items-center mt-20">
+          <Text className="text-gray-500">No bookings found</Text>
         </View>
-      )}
-    </ScrollView>
+      }
+    />
   );
 };
 

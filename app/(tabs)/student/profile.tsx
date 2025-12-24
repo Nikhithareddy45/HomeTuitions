@@ -94,8 +94,6 @@ const UserProfile: React.FC = () => {
     try {
       setLoading(true);
       const currentUser = await getCurrentUser();
-      console.log(currentUser, 'currentUser');
-      console.log(currentUser.id, 'currentUser.id');
       if (!currentUser?.id) {
         Alert.alert('Error', 'User not found');
         return;
