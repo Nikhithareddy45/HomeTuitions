@@ -1,88 +1,112 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList } from 'react-native';
-import { EnquiryRound, TutorSelection } from '@/types/enquiry';
-import TutorRow from '@/components/Enquirys/TutorRow';
-import { BackButton } from '@/components/ui/BackButton';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { AlertCircle, Inbox } from "lucide-react-native";
 
-const OfflineEnquiry = () => {
-  const [rounds, setRounds] = useState<EnquiryRound[]>([
-    {
-      round: 1,
-      tutors: Array.from({ length: 5 }).map((_, i) => ({
-        tutorId: i + 1,
-        tutorName: `Tutor ${i + 1}`,
-        checked: false,
-        action: 'pending',
-        status: 'application_received',
-      })),
-    },
-    {
-      round: 2,
-      tutors: [],
-    },
-    {
-      round: 3,
-      tutors: [],
-    },
-  ]);
+import { getMyEnquiriesAPI } from "@/services/enquiry";
+import TutorRequestRow from "@/components/Enquirys/TutorRequestRow";
+import { BackButton } from "@/components/ui/BackButton";
 
-  const updateTutor = (
-    roundNumber: number,
-    tutorId: number,
-    updates: Partial<TutorSelection>
-  ) => {
-    setRounds(prev =>
-      prev.map(round =>
-        round.round === roundNumber
-          ? {
-              ...round,
-              tutors: round.tutors.map(tutor =>
-                tutor.tutorId === tutorId
-                  ? { ...tutor, ...updates }
-                  : tutor
-              ),
-            }
-          : round
-      )
+type TutorRequest = {
+  id: number;
+  tutor_username?: string;
+  tutor?: string;
+  status: string;
+  user_demo_status?: string;
+  created: string;
+};
+
+const UserEnquiryList = () => {
+  const [requests, setRequests] = useState<TutorRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const res = await getMyEnquiriesAPI();
+
+        // ✅ Works for both [] and { data: [] }
+        const enquiries = Array.isArray(res) ? res : res?.data ?? [];
+        setRequests(enquiries);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch enquiries");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
+  /* ---------- Loading ---------- */
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center bg-slate-50">
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text className="mt-2 text-gray-600">Loading enquiries...</Text>
+      </SafeAreaView>
     );
-  };
+  }
 
+  /* ---------- Error ---------- */
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center px-6 bg-slate-50">
+        <AlertCircle size={40} color="#dc2626" />
+        <Text className="mt-2 text-red-600 text-center">{error}</Text>
+      </SafeAreaView>
+    );
+  }
+
+  /* ---------- Screen ---------- */
   return (
-    <FlatList
-      data={rounds}
-      style={{ margin: 16 }}
-      keyExtractor={(item) => item.round.toString()}
-      ListHeaderComponent={
-      <View className="mb-6 gap-3 flex-row items-center">
-        <BackButton/>
-        <Text className="text-xl font-bold">Offline Enquiry</Text>
+    <SafeAreaView className="flex-1 bg-slate-50">
+      {/* Header */}
+      <View className="flex-row items-center px-4 py-3 border-b border-gray-200 bg-white">
+        <BackButton />
+        <Text className="ml-3 text-xl font-semibold text-gray-900">
+          Tutor Requests
+        </Text>
       </View>
-        }
-      renderItem={({ item: round }) => (
-        <View className="mb-6">
-          <Text className="text-lg font-bold mb-3">
-            Round {round.round}
-          </Text>
 
-          {round.tutors.length === 0 ? (
-            <Text className="text-gray-500 italic">
-              No tutors assigned yet
+      <FlatList
+        data={requests}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={{
+          padding: 16,
+          flexGrow: 1, // ✅ FIXES empty-center issue
+        }}
+        ListEmptyComponent={
+          <View className="flex-1 justify-center items-center px-6">
+            <Inbox size={48} color="#9ca3af" />
+            <Text className="mt-2 text-gray-700 font-medium">
+              No Requests Found
             </Text>
-          ) : (
-            round.tutors.map(tutor => (
-              <TutorRow
-                key={tutor.tutorId}
-                tutor={tutor}
-                onChange={(updates) =>
-                  updateTutor(round.round, tutor.tutorId, updates)
-                }
-              />
-            ))
-          )}
-        </View>
-      )}
-    />
+            <Text className="text-gray-500 text-sm text-center mt-1">
+              You have not received any tutor requests yet.
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <TutorRequestRow
+            data={{
+              id: item.id,
+              tutor: item.tutor_username || item.tutor || "N/A",
+              status: item.status,
+              demo_status: item.user_demo_status || "not sent",
+              created: item.created,
+            }}
+          />
+        )}
+      />
+    </SafeAreaView>
   );
 };
 
-export default OfflineEnquiry;
+export default UserEnquiryList;
