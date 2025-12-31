@@ -1,109 +1,138 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
   FlatList,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AlertCircle, Inbox } from "lucide-react-native";
-
-import { getMyEnquiriesAPI } from "@/services/enquiry";
-import TutorRequestRow from "@/components/Enquirys/TutorRequestRow";
+import { getAllEnquiriesAPI } from "@/services/enquiry";
 import { BackButton } from "@/components/ui/BackButton";
+import EnquiryRow from "@/app/sections/enquiries/ViewInfo";
 
-type TutorRequest = {
+/* ================= TYPES ================= */
+
+type Enquiry = {
   id: number;
-  tutor_username?: string;
-  tutor?: string;
-  status: string;
-  user_demo_status?: string;
   created: string;
+  status: "pending" | "accepted" | "declrined";
+  subjects?: string[];
 };
 
+/* ================= HELPERS ================= */
+
+const groupIntoRounds = (data: Enquiry[]) => {
+  const map: Record<string, Enquiry[]> = {};
+
+  data.forEach((item) => {
+    const key = new Date(item.created).toDateString();
+    if (!map[key]) map[key] = [];
+    map[key].push(item);
+  });
+
+  return Object.entries(map).map(([date, items], index) => ({
+    round: index + 1,
+    date,
+    items,
+  }));
+};
+
+/* ================= ROUND CARD ================= */
+
+const RoundCard = ({ round }: any) => {
+  const [roundAction, setRoundAction] = useState("pending");
+  const [selected, setSelected] = useState<number[]>([]);
+
+  const toggleSelect = (id: number) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  return (
+    <View className="bg-white rounded-xl p-4 mb-4 border border-gray-200">
+      {/* Header */}
+      <View className="flex-row justify-between items-center mb-3">
+        <Text className="font-semibold text-gray-800">
+          Round {round.round} • {round.date}
+        </Text>
+
+        {/* Round Action */}
+        <TouchableOpacity
+          onPress={() =>
+            setRoundAction((prev) =>
+              prev === "pending"
+                ? "accepted"
+                : prev === "accepted"
+                ? "declined"
+                : "pending"
+            )
+          }
+          className="px-3 py-1 rounded-full bg-slate-100"
+        >
+          <Text className="text-xs capitalize">{roundAction}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Rows */}
+      {round.items.map((item: Enquiry) => (
+        <EnquiryRow
+          key={item.id}
+          enquiry={item}
+          selected={selected.includes(item.id)}
+          onToggle={() => toggleSelect(item.id)}
+          roundAction={roundAction}
+        />
+      ))}
+    </View>
+  );
+};
+
+/* ================= SCREEN ================= */
+
 const UserEnquiryList = () => {
-  const [requests, setRequests] = useState<TutorRequest[]>([]);
+  const [data, setData] = useState<Enquiry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchRequests = async () => {
+    const fetchData = async () => {
       try {
-        const res = await getMyEnquiriesAPI();
-
-        // ✅ Works for both [] and { data: [] }
-        const enquiries = Array.isArray(res) ? res : res?.data ?? [];
-        setRequests(enquiries);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch enquiries");
+        const response = await getAllEnquiriesAPI();
+        console.log("Enquiries response:", JSON.stringify(response, null, 2));
+        setData(response);
+      } catch (error) {
+        console.error("Error fetching enquiries:", error);
+        setData([]);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchRequests();
+    fetchData();
   }, []);
 
-  /* ---------- Loading ---------- */
+  const rounds = useMemo(() => groupIntoRounds(data), [data]);
+
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center bg-slate-50">
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text className="mt-2 text-gray-600">Loading enquiries...</Text>
+      <SafeAreaView className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" />
       </SafeAreaView>
     );
   }
 
-  /* ---------- Error ---------- */
-  if (error) {
-    return (
-      <SafeAreaView className="flex-1 justify-center items-center px-6 bg-slate-50">
-        <AlertCircle size={40} color="#dc2626" />
-        <Text className="mt-2 text-red-600 text-center">{error}</Text>
-      </SafeAreaView>
-    );
-  }
-
-  /* ---------- Screen ---------- */
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-200 bg-white">
+      <View className="flex-row items-center px-4 py-3 bg-white border-b">
         <BackButton />
-        <Text className="ml-3 text-xl font-semibold text-gray-900">
-          Tutor Requests
-        </Text>
+        <Text className="ml-3 text-xl font-semibold">Enquiry Tracker</Text>
       </View>
 
       <FlatList
-        data={requests}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{
-          padding: 16,
-          flexGrow: 1, // ✅ FIXES empty-center issue
-        }}
-        ListEmptyComponent={
-          <View className="flex-1 justify-center items-center px-6">
-            <Inbox size={48} color="#9ca3af" />
-            <Text className="mt-2 text-gray-700 font-medium">
-              No Requests Found
-            </Text>
-            <Text className="text-gray-500 text-sm text-center mt-1">
-              You have not received any tutor requests yet.
-            </Text>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <TutorRequestRow
-            data={{
-              id: item.id,
-              tutor: item.tutor_username || item.tutor || "N/A",
-              status: item.status,
-              demo_status: item.user_demo_status || "not sent",
-              created: item.created,
-            }}
-          />
-        )}
+        data={rounds}
+        keyExtractor={(item) => String(item.round)}
+        contentContainerStyle={{ padding: 16 }}
+        renderItem={({ item }) => <RoundCard round={item} />}
       />
     </SafeAreaView>
   );

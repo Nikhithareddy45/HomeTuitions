@@ -49,7 +49,8 @@ export type TutorStatus =
   | 'tutor_sent'
   | 'demo_requested'
   | 'demo_completed'
-  | 'tutor_finalized';
+  | 'tutor_finalized'
+  | 'cancelled';
 
 export interface TutorSelection {
   tutorId: number;
@@ -57,6 +58,11 @@ export interface TutorSelection {
   checked: boolean;
   action: TutorAction;
   status: TutorStatus;
+}
+export interface FlowItem {
+  enquiryId: number;
+  status_label: TutorStatus;
+  createdAt: string;
 }
 
 export interface EnquiryRound {
