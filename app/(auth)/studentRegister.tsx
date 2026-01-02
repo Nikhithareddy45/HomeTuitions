@@ -4,8 +4,8 @@ import Button from '@/components/ui/Button';
 import DOBPicker from '@/components/ui/DOBInput';
 import Input from '@/components/ui/Input';
 import { useFormReset } from '@/hooks/useFormReset';
+import { useRefreshStore } from '@/hooks/useRefreshStore';
 import { registerStudent } from '@/services/auth';
-import { useRefreshStore } from '@/store/useRefreshStore';
 import {
     studentRegistrationSchema
 } from '@/utils/validationYup';

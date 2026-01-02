@@ -1,263 +1,267 @@
-import React, { useState } from "react";
-import { View, Text, Pressable } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-/* =======================
-   TYPES
-======================= */
+import {
+  getEnquiryDemoRequestsAPI,
+  getSentTutorsAPI,
+  sendTutorDemoAPI,
+} from "@/services/enquiry";
 
-export type TutorActionStatus = "accepted" | "rejected" | "pending";
+import DemoRequestModal from "@/components/enquiry/DemoRequestModal";
+import { BackButton } from "@/components/ui/BackButton";
+import {
+  Calendar,
+  CheckCircle,
+  ExternalLink,
+  RefreshCw,
+  User,
+} from "lucide-react-native";
 
-export interface TutorActionEntry {
-  tutorId: number;
-  tutorName: string;
-  status: TutorActionStatus;
-  action: TutorActionStatus;
-  createdAt: string;
-  selected?: boolean;
+/* ================= TYPES ================= */
+
+interface TutorItem {
+  id: number;
+  username: string;
 }
 
-export interface EnquiryRound {
-  round: number;
-  createdAt: string;
-  tutors: TutorActionEntry[];
+interface SentTutor {
+  id: number;
+  tutors: TutorItem[];
+  round_number: number;
 }
 
-/* =======================
-   DUMMY DATA
-======================= */
+interface DemoRequest {
+  id: number;
+  tutor: {
+    id: number;
+  };
+  demo_date: string;
+  demo_time: string;
+  message?: string;
+}
 
-const DUMMY_TUTOR_ACTIONS: TutorActionEntry[] = [
-  {
-    tutorId: 1,
-    tutorName: "Ramesh Kumar",
-    status: "pending",
-    action: "pending",
-    createdAt: "2025-01-01T10:00:00Z",
-  },
-  {
-    tutorId: 2,
-    tutorName: "Suresh Rao",
-    status: "accepted",
-    action: "accepted",
-    createdAt: "2025-01-01T10:00:00Z",
-  },
-  {
-    tutorId: 3,
-    tutorName: "Anjali Sharma",
-    status: "pending",
-    action: "pending",
-    createdAt: "2025-01-02T11:30:00Z",
-  },
-  {
-    tutorId: 4,
-    tutorName: "Vikram Singh",
-    status: "pending",
-    action: "pending",
-    createdAt: "2025-01-02T11:30:00Z",
-  },
-  {
-    tutorId: 5,
-    tutorName: "Neha Patel",
-    status: "pending",
-    action: "pending",
-    createdAt: "2025-01-03T09:15:00Z",
-  },
-];
+/* ================= COMPONENT ================= */
 
-/* =======================
-   BUILD ROUNDS
-======================= */
+export default function ViewStatusScreen() {
+  const { enquiryId: enquiryIdParam } = useLocalSearchParams<{ enquiryId?: string }>();
+  const router = useRouter();
+  const enquiryId = Number(enquiryIdParam);
 
-const buildRounds = (data: TutorActionEntry[]): EnquiryRound[] => {
-  const grouped = data.reduce((acc, item) => {
-    if (!acc[item.createdAt]) acc[item.createdAt] = [];
-    acc[item.createdAt].push({ ...item, selected: false });
-    return acc;
-  }, {} as Record<string, TutorActionEntry[]>);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  return Object.entries(grouped)
-    .map(([createdAt, tutors], index) => ({
-      round: index + 1,
-      createdAt,
-      tutors,
-    }))
-    .reverse(); // latest round on top
-};
+  const [sentData, setSentData] = useState<SentTutor[]>([]);
+  const [flowData, setFlowData] = useState<any[]>([]);
+  const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([]);
 
-/* =======================
-   COMPONENT
-======================= */
+  const [openModal, setOpenModal] = useState(false);
+  const [activeTutor, setActiveTutor] = useState<number | null>(null);
 
-const EnquiryRoundsFlow = () => {
-  const [rounds, setRounds] = useState(buildRounds(DUMMY_TUTOR_ACTIONS));
+  /* ================= LOAD DATA ================= */
 
-  /* Toggle single tutor */
-  const toggleTutorSelect = (roundIndex: number, tutorId: number) => {
-    const updated = [...rounds];
-    const tutor = updated[roundIndex].tutors.find(
-      (t) => t.tutorId === tutorId
-    );
-    if (tutor && tutor.action !== "accepted") {
-      tutor.selected = !tutor.selected;
+  useEffect(() => {
+    if (!enquiryId) return;
+    loadPageData();
+  }, [enquiryId]);
+
+  const loadPageData = async (refresh = false) => {
+    refresh ? setRefreshing(true) : setLoading(true);
+
+    try {
+      const [tutorRes, demoRes] = await Promise.all([
+        getSentTutorsAPI(enquiryId),
+        getEnquiryDemoRequestsAPI(enquiryId),
+      ]);
+
+      setSentData(tutorRes || []);
+      setDemoRequests(demoRes || []);
+    } catch (err) {
+      console.error("Failed loading status page", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-    setRounds(updated);
   };
 
-  /* Toggle select all in round */
-  const toggleSelectAll = (roundIndex: number) => {
-    const updated = [...rounds];
-    const tutors = updated[roundIndex].tutors;
+  /* ================= HELPERS ================= */
 
-    const allSelected = tutors.every(
-      (t) => t.selected || t.action === "accepted"
-    );
+  const getDemoForTutor = (tutorId: number) =>
+    demoRequests.find((d) => d.tutor.id === tutorId);
 
-    tutors.forEach((t) => {
-      if (t.action !== "accepted") {
-        t.selected = !allSelected;
-      }
-    });
-
-    setRounds(updated);
+  const isDemoCompleted = (demo?: DemoRequest) => {
+    if (!demo) return false;
+    const demoDateTime = new Date(`${demo.demo_date}T${demo.demo_time}`);
+    return new Date() >= demoDateTime;
   };
 
-  const updateAction = (
-    roundIndex: number,
-    tutorId: number,
-    action: TutorActionStatus
-  ) => {
-    const updated = [...rounds];
-    const tutor = updated[roundIndex].tutors.find(
-      (t) => t.tutorId === tutorId
-    );
-    if (tutor) {
-      tutor.action = action;
-      if (action === "accepted") tutor.selected = false;
+  /* ================= ACTIONS ================= */
+
+  const handleSendDemo = async (values: any) => {
+    if (!activeTutor) return;
+
+    setActionLoading(activeTutor);
+    try {
+      await sendTutorDemoAPI(
+        enquiryId,
+        activeTutor,
+        values.demo_date,
+        values.demo_time,
+        values.message || ""
+      );
+
+      alert("Demo scheduled successfully");
+      setOpenModal(false);
+      setActiveTutor(null);
+      await loadPageData(true);
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Demo scheduling failed");
+    } finally {
+      setActionLoading(null);
     }
-    setRounds(updated);
   };
+
+  /* ================= RENDER ================= */
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
+  }
 
   return (
-    <View className="px-4 py-6 bg-white">
-      {rounds.map((round, roundIndex) => {
-        const acceptedTutor = round.tutors.find(
-          (t) => t.action === "accepted"
-        );
+    <ScrollView className="flex-1 bg-gray-50 p-6">
+      {/* HEADER */}
+      <View className="flex-row justify-between items-center mb-4">
+        <BackButton/>
+        <Text className="text-2xl font-bold">Application Status</Text>
 
-        const allSelected = round.tutors.every(
-          (t) => t.selected || t.action === "accepted"
-        );
+        <TouchableOpacity
+          onPress={() => loadPageData(true)}
+          className="flex-row items-center gap-2 bg-blue-600 px-4 py-2 rounded-lg"
+        >
+          <RefreshCw size={16} color="white" />
+          <Text className="text-white font-semibold">
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        return (
-          <View key={round.round} className="mb-8">
-            {/* Round Header */}
-            <View className="flex-row justify-between items-center mb-3">
-              <View>
-                <Text className="text-lg font-bold text-gray-800">
-                  Round {round.round}
-                </Text>
-                <Text className="text-xs text-gray-500">
-                  {new Date(round.createdAt).toLocaleString()}
-                </Text>
-              </View>
-
-              {/* Select All */}
-              <Pressable
-                onPress={() => toggleSelectAll(roundIndex)}
-                className="flex-row items-center"
-              >
-                <View
-                  className={`w-4 h-4 mr-2 rounded border ${
-                    allSelected ? "bg-blue-600" : "bg-white"
-                  }`}
-                />
-                <Text className="text-sm text-gray-600">Select all</Text>
-              </Pressable>
-            </View>
-
-            {/* Tutors */}
-            <View className="border border-gray-200 rounded-xl bg-gray-50">
-              {round.tutors.map((tutor) => {
-                const isAccepted = tutor.action === "accepted";
-
-                return (
-                  <View
-                    key={tutor.tutorId}
-                    className={`flex-row items-center justify-between px-3 py-3 border-b border-gray-200 ${
-                      isAccepted ? "bg-green-50" : "bg-white"
-                    }`}
-                  >
-                    {/* Checkbox */}
-                    <Pressable
-                      onPress={() =>
-                        toggleTutorSelect(roundIndex, tutor.tutorId)
-                      }
-                      disabled={isAccepted}
-                      className={`w-4 h-4 mr-3 rounded border ${
-                        tutor.selected ? "bg-blue-600" : "bg-white"
-                      }`}
-                    />
-
-                    {/* Tutor Info */}
-                    <View className="flex-1 pr-2">
-                      <Text className="font-medium text-gray-800">
-                        {tutor.tutorName}
-                      </Text>
-                      <Text className="text-xs text-gray-500">
-                        Status: {tutor.status}
-                      </Text>
-
-                      {isAccepted && (
-                        <Text className="text-xs text-green-600 font-semibold mt-1">
-                          ✔ Accepted
-                        </Text>
-                      )}
-                    </View>
-
-                    {/* Action Picker */}
-                    <View
-                      className={`w-24 h-8 justify-center rounded-md ${
-                        isAccepted
-                          ? "bg-gray-200"
-                          : "border border-gray-300 bg-white"
-                      }`}
-                    >
-                      <Picker
-                        enabled={!isAccepted}
-                        selectedValue={tutor.action}
-                        onValueChange={(value) =>
-                          updateAction(
-                            roundIndex,
-                            tutor.tutorId,
-                            value as TutorActionStatus
-                          )
-                        }
-                        style={{ height: 30 }}
-                      >
-                        <Picker.Item label="Pending" value="pending" />
-                        <Picker.Item label="Accept" value="accepted" />
-                        <Picker.Item label="Reject" value="rejected" />
-                      </Picker>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-
-            {/* Next Round Triggered */}
-            {acceptedTutor && roundIndex !== rounds.length - 1 && (
-              <View className="items-center mt-3">
-                <Text className="text-xs text-blue-600 font-semibold">
-                  ⬇ Next Round Triggered
-                </Text>
-              </View>
-            )}
+      {/* ROUNDS */}
+      {sentData.map((round) => (
+        <View key={round.id} className="bg-white rounded-xl mb-4 overflow-hidden">
+          <View className="bg-blue-600 p-3">
+            <Text className="text-white font-bold">
+              Round {round.round_number}
+            </Text>
           </View>
-        );
-      })}
-    </View>
-  );
-};
 
-export default EnquiryRoundsFlow;
+          {round.tutors.map((tutor) => {
+            const demo = getDemoForTutor(tutor.id);
+
+            return (
+              <View
+                key={tutor.id}
+                className="border-b border-gray-200 p-4"
+              >
+                {/* Tutor */}
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: '/sections/tutor/[id]',
+                      params: { id: String(tutor.id) }
+                    })
+                  }
+                  className="flex-row items-center gap-3 mb-2"
+                >
+                  <User size={18} color="#2563eb" />
+                  <Text className="text-blue-600 font-semibold">
+                    {tutor.username}
+                  </Text>
+                  <ExternalLink size={14} color="#2563eb" />
+                </TouchableOpacity>
+
+                {/* Demo Status */}
+                {!demo && (
+                  <Text className="text-gray-500 mb-2">
+                    No demo scheduled
+                  </Text>
+                )}
+
+                {demo && (
+                  <View className="bg-blue-50 p-3 rounded-lg mb-2">
+                    <View className="flex-row items-center gap-2">
+                      <CheckCircle size={16} color="#2563eb" />
+                      <Text className="font-semibold text-blue-600">
+                        Demo Scheduled
+                      </Text>
+                    </View>
+                    <Text className="text-xs text-gray-600 mt-1">
+                      {demo.demo_date} • {demo.demo_time}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Actions */}
+                {!demo && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setActiveTutor(tutor.id);
+                      setOpenModal(true);
+                    }}
+                    className="bg-green-600 px-4 py-2 rounded-lg"
+                    disabled={actionLoading === tutor.id}
+                  >
+                    <Text className="text-white text-center font-semibold">
+                      {actionLoading === tutor.id
+                        ? "Scheduling..."
+                        : "Schedule Demo"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {demo && !isDemoCompleted(demo) && (
+                  <View className="flex-row items-center gap-2 mt-2">
+                    <Calendar size={16} color="#f59e0b" />
+                    <Text className="text-amber-600">
+                      Upcoming Demo
+                    </Text>
+                  </View>
+                )}
+
+                {demo && isDemoCompleted(demo) && (
+                  <View className="flex-row items-center gap-2 mt-2">
+                    <CheckCircle size={16} color="#16a34a" />
+                    <Text className="text-green-600">
+                      Demo Completed
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      ))}
+
+      {/* MODAL */}
+      <DemoRequestModal
+        open={openModal}
+        tutorId={activeTutor}
+        onClose={() => {
+          setOpenModal(false);
+          setActiveTutor(null);
+        }}
+        onSubmit={handleSendDemo}
+      />
+    </ScrollView>
+  );
+}

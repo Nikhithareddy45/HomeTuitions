@@ -1,17 +1,17 @@
 import { BackButton } from '@/components/ui/BackButton';
-import React, { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  ScrollView,
-  Text,
-  Pressable,
-  TextInput,
-  FlatList,
+    FlatList,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
 
-import { useRouter } from "expo-router";
-import { useFilterStore } from "@/store/useFilterStore";
 import Button from '@/components/ui/Button';
+import { useFilterStore } from "@/hooks/useFilterStore";
+import { useRouter } from "expo-router";
 
 const filtersData = {
   gender: ['Male', 'Female', 'Other'],

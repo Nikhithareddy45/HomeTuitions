@@ -78,12 +78,3 @@ export const getRejectedAPI = async (): Promise<any> => {
       } 
 };
 
-export const updateDemoStatusAPI = async (demoId: number, status: string): Promise<any> => {
-  try {
-    const response = await apiClient.patch(`/api/demoapp/v1/demoapp/${demoId}/`, { status });
-    return response.data;
-  } catch (error: any) {
-    console.error("API error response:", error.response?.data);
-    throw error;
-  }
-};

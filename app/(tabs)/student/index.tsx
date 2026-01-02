@@ -1,18 +1,17 @@
+import TutorCard from '@/components/tutor/TutorCard';
 import Button from '@/components/ui/Button';
 import SearchBar from '@/components/ui/Search';
-import TutorCard from '@/components/tutor/TutorCard';
+import { useFilterStore } from '@/hooks/useFilterStore';
 import { getAllTutorsAPI } from '@/services/tutor';
-import { useFilterStore } from '@/store/useFilterStore';
-import { useRefreshStore } from '@/store/useRefreshStore';
+import { useRefreshStore } from '@/hooks/useRefreshStore';
 import { GetAllTutorData } from '@/types/tutor';
 import { useRouter } from 'expo-router';
 import { FunnelPlus } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View, Image, Alert } from 'react-native';
-import { Images } from '@/constants/images';
-import { LogOut, Bell } from 'lucide-react-native';
+import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+
+import { setUserCache } from '@/utils/getUserFromStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {  setUserCache } from '@/utils/getUserFromStorage';
 
 // Filter function (NO location)
 const applyFilters = (tutors: GetAllTutorData[], filters: Record<string, string[]>, query: string) => {
@@ -142,24 +141,6 @@ const handleLogout = async () => {
 
   return (
     <View className="flex-1 bg-gray-50 px-4 pt-4 gap-1">
-      <View className="rounded-full flex-row items-center justify-between mx-4 my-2 ">
-        <View className="flex-row items-center gap-2">
-          <Image
-            source={Images.Logo}
-            className="w-12 h-12 rounded-full"
-            resizeMode="contain"
-          />
-          <Text className="text-lg font-bold">Home Tuitions</Text>
-        </View>
-        <View className="flex-row items-center gap-6">
-            <Pressable onPress={() => { router.push('/sections/Notifications') }}>
-            <Bell color="#2673d6ff"/>
-          </Pressable>
-          <Pressable onPress={handleLogout}>
-            <LogOut color="#e05555ff"/>
-          </Pressable>         
-        </View>
-      </View>
       <View className="items-center flex-row justify-center">
         <SearchBar
           value={query}
