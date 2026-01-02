@@ -1,4 +1,4 @@
-import AddressForm from '@/components/AddressComp';
+import AddressForm from '@/components/forms/AddressForm';
 import { BackButton } from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import DOBPicker from '@/components/ui/DOBInput';

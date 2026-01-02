@@ -1,4 +1,4 @@
-import AddressForm from '@/components/AddressComp';
+import AddressForm from '@/components/forms/AddressForm';
 import { BackButton } from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import GenericMultiSelect from '@/components/ui/GenericMultiSelect';
@@ -7,9 +7,9 @@ import RadioGroup from '@/components/ui/RadioGroup';
 import Textarea from '@/components/ui/Textarea';
 import TimePicker from '@/components/ui/TimePicker';
 import { board_options, class_options, gender_options, section_options, subject_options } from '@/constants/constants';
+import { useFormReset } from '@/hooks/useFormReset';
 import { registerTutor } from '@/services/auth';
 import { useRefreshStore } from '@/store/useRefreshStore';
-import { useFormReset } from '@/utils/useFormReset';
 import { tutorRegistrationSchema } from '@/utils/validationYup';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';

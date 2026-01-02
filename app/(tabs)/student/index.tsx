@@ -1,6 +1,6 @@
 import Button from '@/components/ui/Button';
 import SearchBar from '@/components/ui/Search';
-import TutorCard from '@/components/user/TutorCard';
+import TutorCard from '@/components/tutor/TutorCard';
 import { getAllTutorsAPI } from '@/services/tutor';
 import { useFilterStore } from '@/store/useFilterStore';
 import { useRefreshStore } from '@/store/useRefreshStore';

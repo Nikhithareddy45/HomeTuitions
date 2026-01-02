@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 
 /* =======================
    TYPES
@@ -10,9 +11,10 @@ export type TutorActionStatus = "accepted" | "rejected" | "pending";
 export interface TutorActionEntry {
   tutorId: number;
   tutorName: string;
-  status: TutorActionStatus;   // backend status
-  action: TutorActionStatus;   // user-selected action
+  status: TutorActionStatus;
+  action: TutorActionStatus;
   createdAt: string;
+  selected?: boolean;
 }
 
 export interface EnquiryRound {
@@ -22,7 +24,7 @@ export interface EnquiryRound {
 }
 
 /* =======================
-   DUMMY DATA (5 Tutors)
+   DUMMY DATA
 ======================= */
 
 const DUMMY_TUTOR_ACTIONS: TutorActionEntry[] = [
@@ -43,8 +45,8 @@ const DUMMY_TUTOR_ACTIONS: TutorActionEntry[] = [
   {
     tutorId: 3,
     tutorName: "Anjali Sharma",
-    status: "rejected",
-    action: "rejected",
+    status: "pending",
+    action: "pending",
     createdAt: "2025-01-02T11:30:00Z",
   },
   {
@@ -64,29 +66,61 @@ const DUMMY_TUTOR_ACTIONS: TutorActionEntry[] = [
 ];
 
 /* =======================
-   ROUND BUILDER
+   BUILD ROUNDS
 ======================= */
 
 const buildRounds = (data: TutorActionEntry[]): EnquiryRound[] => {
   const grouped = data.reduce((acc, item) => {
     if (!acc[item.createdAt]) acc[item.createdAt] = [];
-    acc[item.createdAt].push(item);
+    acc[item.createdAt].push({ ...item, selected: false });
     return acc;
   }, {} as Record<string, TutorActionEntry[]>);
 
-  return Object.entries(grouped).map(([createdAt, tutors], index) => ({
-    round: index + 1,
-    createdAt,
-    tutors,
-  }));
+  return Object.entries(grouped)
+    .map(([createdAt, tutors], index) => ({
+      round: index + 1,
+      createdAt,
+      tutors,
+    }))
+    .reverse(); // latest round on top
 };
 
 /* =======================
-   UI COMPONENT
+   COMPONENT
 ======================= */
 
 const EnquiryRoundsFlow = () => {
   const [rounds, setRounds] = useState(buildRounds(DUMMY_TUTOR_ACTIONS));
+
+  /* Toggle single tutor */
+  const toggleTutorSelect = (roundIndex: number, tutorId: number) => {
+    const updated = [...rounds];
+    const tutor = updated[roundIndex].tutors.find(
+      (t) => t.tutorId === tutorId
+    );
+    if (tutor && tutor.action !== "accepted") {
+      tutor.selected = !tutor.selected;
+    }
+    setRounds(updated);
+  };
+
+  /* Toggle select all in round */
+  const toggleSelectAll = (roundIndex: number) => {
+    const updated = [...rounds];
+    const tutors = updated[roundIndex].tutors;
+
+    const allSelected = tutors.every(
+      (t) => t.selected || t.action === "accepted"
+    );
+
+    tutors.forEach((t) => {
+      if (t.action !== "accepted") {
+        t.selected = !allSelected;
+      }
+    });
+
+    setRounds(updated);
+  };
 
   const updateAction = (
     roundIndex: number,
@@ -97,71 +131,131 @@ const EnquiryRoundsFlow = () => {
     const tutor = updated[roundIndex].tutors.find(
       (t) => t.tutorId === tutorId
     );
-    if (tutor) tutor.action = action;
+    if (tutor) {
+      tutor.action = action;
+      if (action === "accepted") tutor.selected = false;
+    }
     setRounds(updated);
   };
 
   return (
     <View className="px-4 py-6 bg-white">
-      {rounds.map((round, roundIndex) => (
-        <View
-          key={round.round}
-          className="mb-6 border border-gray-200 rounded-xl p-4"
-        >
-          {/* Round Header */}
-          <Text className="text-lg font-bold text-gray-800">
-            Round {round.round}
-          </Text>
-          <Text className="text-xs text-gray-500 mb-4">
-            {new Date(round.createdAt).toLocaleString()}
-          </Text>
+      {rounds.map((round, roundIndex) => {
+        const acceptedTutor = round.tutors.find(
+          (t) => t.action === "accepted"
+        );
 
-          {/* Tutors */}
-          {round.tutors.map((tutor) => (
-            <View
-              key={tutor.tutorId}
-              className="mb-4 p-4 bg-gray-50 rounded-lg"
-            >
-              <Text className="font-semibold text-gray-800">
-                {tutor.tutorName}
-              </Text>
+        const allSelected = round.tutors.every(
+          (t) => t.selected || t.action === "accepted"
+        );
 
-              <Text className="text-xs text-gray-500 mt-1">
-                Status: {tutor.status}
-              </Text>
+        return (
+          <View key={round.round} className="mb-8">
+            {/* Round Header */}
+            <View className="flex-row justify-between items-center mb-3">
+              <View>
+                <Text className="text-lg font-bold text-gray-800">
+                  Round {round.round}
+                </Text>
+                <Text className="text-xs text-gray-500">
+                  {new Date(round.createdAt).toLocaleString()}
+                </Text>
+              </View>
 
-              {/* Action Selector */}
-              <View className="flex-row mt-3 gap-2">
-                {(["accepted", "rejected", "pending"] as TutorActionStatus[]).map(
-                  (action) => (
-                    <TouchableOpacity
-                      key={action}
+              {/* Select All */}
+              <Pressable
+                onPress={() => toggleSelectAll(roundIndex)}
+                className="flex-row items-center"
+              >
+                <View
+                  className={`w-4 h-4 mr-2 rounded border ${
+                    allSelected ? "bg-blue-600" : "bg-white"
+                  }`}
+                />
+                <Text className="text-sm text-gray-600">Select all</Text>
+              </Pressable>
+            </View>
+
+            {/* Tutors */}
+            <View className="border border-gray-200 rounded-xl bg-gray-50">
+              {round.tutors.map((tutor) => {
+                const isAccepted = tutor.action === "accepted";
+
+                return (
+                  <View
+                    key={tutor.tutorId}
+                    className={`flex-row items-center justify-between px-3 py-3 border-b border-gray-200 ${
+                      isAccepted ? "bg-green-50" : "bg-white"
+                    }`}
+                  >
+                    {/* Checkbox */}
+                    <Pressable
                       onPress={() =>
-                        updateAction(roundIndex, tutor.tutorId, action)
+                        toggleTutorSelect(roundIndex, tutor.tutorId)
                       }
-                      className={`px-3 py-1 rounded-full ${
-                        tutor.action === action
-                          ? "bg-blue-600"
-                          : "bg-gray-200"
+                      disabled={isAccepted}
+                      className={`w-4 h-4 mr-3 rounded border ${
+                        tutor.selected ? "bg-blue-600" : "bg-white"
+                      }`}
+                    />
+
+                    {/* Tutor Info */}
+                    <View className="flex-1 pr-2">
+                      <Text className="font-medium text-gray-800">
+                        {tutor.tutorName}
+                      </Text>
+                      <Text className="text-xs text-gray-500">
+                        Status: {tutor.status}
+                      </Text>
+
+                      {isAccepted && (
+                        <Text className="text-xs text-green-600 font-semibold mt-1">
+                          ✔ Accepted
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* Action Picker */}
+                    <View
+                      className={`w-24 h-8 justify-center rounded-md ${
+                        isAccepted
+                          ? "bg-gray-200"
+                          : "border border-gray-300 bg-white"
                       }`}
                     >
-                      <Text
-                        className={`text-xs font-medium ${
-                          tutor.action === action
-                            ? "text-white"
-                            : "text-gray-700"
-                        }`}
+                      <Picker
+                        enabled={!isAccepted}
+                        selectedValue={tutor.action}
+                        onValueChange={(value) =>
+                          updateAction(
+                            roundIndex,
+                            tutor.tutorId,
+                            value as TutorActionStatus
+                          )
+                        }
+                        style={{ height: 30 }}
                       >
-                        {action}
-                      </Text>
-                    </TouchableOpacity>
-                  )
-                )}
-              </View>
+                        <Picker.Item label="Pending" value="pending" />
+                        <Picker.Item label="Accept" value="accepted" />
+                        <Picker.Item label="Reject" value="rejected" />
+                      </Picker>
+                    </View>
+                  </View>
+                );
+              })}
             </View>
-          ))}
-        </View>
-      ))}
+
+            {/* Next Round Triggered */}
+            {acceptedTutor && roundIndex !== rounds.length - 1 && (
+              <View className="items-center mt-3">
+                <Text className="text-xs text-blue-600 font-semibold">
+                  ⬇ Next Round Triggered
+                </Text>
+              </View>
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 };

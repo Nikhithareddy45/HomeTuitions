@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import { GenericMultiSelectProps } from '@/types/common';
-import { useCloseDropdownOnInputFocus } from '../../utils/useCloseDropdownOnInputFocus';
+import { useCloseDropdownOnInputFocus } from '@/hooks/useCloseDropdownOnInputFocus';
 import Icon from './IconComp';
 
 interface UpdatedMultiSelectProps extends GenericMultiSelectProps {

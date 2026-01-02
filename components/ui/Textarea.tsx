@@ -2,7 +2,7 @@ import Icon from '@/components/ui/IconComp';
 import { LucideIconName } from '@/types/common';
 import React from 'react';
 import { Text, TextInput, TextInputProps, View } from 'react-native';
-import { triggerDropdownClose } from '../../utils/useCloseDropdownOnInputFocus';
+import { triggerDropdownClose } from '@/hooks/useCloseDropdownOnInputFocus';
 
 interface TextareaProps extends Omit<TextInputProps, 'onChange'> {
   label: string;

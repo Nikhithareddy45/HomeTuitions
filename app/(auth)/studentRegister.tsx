@@ -1,24 +1,24 @@
-import AddressForm from '@/components/AddressComp';
+import AddressForm from '@/components/forms/AddressForm';
 import { BackButton } from '@/components/ui/BackButton';
 import Button from '@/components/ui/Button';
 import DOBPicker from '@/components/ui/DOBInput';
 import Input from '@/components/ui/Input';
+import { useFormReset } from '@/hooks/useFormReset';
 import { registerStudent } from '@/services/auth';
 import { useRefreshStore } from '@/store/useRefreshStore';
-import { useFormReset } from '@/utils/useFormReset';
 import {
-  studentRegistrationSchema
+    studentRegistrationSchema
 } from '@/utils/validationYup';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  Text,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    Text,
+    View,
 } from 'react-native';
 
 

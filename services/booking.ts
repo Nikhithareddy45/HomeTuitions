@@ -1,4 +1,6 @@
 
+import apiClient from "./apiClient";
+
 export interface BookDemoData {
   tutorId: string;
   message: string;
@@ -6,25 +8,13 @@ export interface BookDemoData {
   demoTime: string; // free text like "Evening 5PM"
 }
 
-import { getTokenFromStorage } from "@/utils/getUserFromStorage";
-import axios from "axios";
-import { base_url } from "../utils/url";
 export const BookDemoAPI = async ({ tutorId, message, demoDate, demoTime }: BookDemoData): Promise<any> => {
   try {
-    const token = await getTokenFromStorage();
     console.log({ tutorId, message, demoDate, demoTime })
 
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    };
-    const response = await axios.post(
-      `${base_url}/api/demoapp/v1/demoapp/`,
-      { tutor_id: tutorId, message, demo_date: demoDate, demo_time: demoTime },
-      config
+    const response = await apiClient.post(
+      '/api/demoapp/v1/demoapp/',
+      { tutor_id: tutorId, message, demo_date: demoDate, demo_time: demoTime }
     );
     console.log(response.data)
     return response.data;
@@ -36,18 +26,9 @@ export const BookDemoAPI = async ({ tutorId, message, demoDate, demoTime }: Book
 
 export const ApplicationsAPI = async (ApplicationData: any,tutorId: string): Promise<any> => {
   try {
-    const token = await getTokenFromStorage(); 
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    };
-    const response = await axios.post(
-      `${base_url}/api/demoapp/v1/demoapp/`,
-      { tutor_id: tutorId, ...ApplicationData },
-      config
+    const response = await apiClient.post(
+      '/api/demoapp/v1/demoapp/',
+      { tutor_id: tutorId, ...ApplicationData }
     );
     return response.data;
   } catch (error: any) {
@@ -57,16 +38,7 @@ export const ApplicationsAPI = async (ApplicationData: any,tutorId: string): Pro
 };  
 export const getAcceptedAPI = async (): Promise<any> => {
       try {
-        const token = await getTokenFromStorage();
-      const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    };
-        const response = await axios.get(`${base_url}/api/demoapp/v1/demoapp/?status=accepted`,
-          config,
-          );
+        const response = await apiClient.get('/api/demoapp/v1/demoapp/?status=accepted');
           
         return response.data;
       } catch (error: any) {
@@ -77,17 +49,7 @@ export const getAcceptedAPI = async (): Promise<any> => {
 
 export const getPendingAPI = async (): Promise<any> => {
       try {
-        const token = await getTokenFromStorage();
-      const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    };
-        const response = await axios.get(`${base_url}/api/demoapp/v1/demoapp/?status=pending`,
-          config,
-          );
+        const response = await apiClient.get('/api/demoapp/v1/demoapp/?status=pending');
         return response.data;
       } catch (error: any) {
         console.log("API error response:", error);
@@ -98,18 +60,7 @@ export const getPendingAPI = async (): Promise<any> => {
 
 export const GetMyApplicationsAPI = async (): Promise<any> => {
   try {
-    const token = await getTokenFromStorage();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    };
-    const response = await axios.get(
-      `${base_url}/api/demoapp/v1/demoapp/`,
-      config
-    );
+    const response = await apiClient.get('/api/demoapp/v1/demoapp/');
     return response.data;
   } catch (error: any) {
     console.error("API error response:", error.response?.data);
@@ -119,20 +70,20 @@ export const GetMyApplicationsAPI = async (): Promise<any> => {
 
 export const getRejectedAPI = async (): Promise<any> => {
       try {
-        const token = await getTokenFromStorage();
-      const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      withCredentials: true,
-    };
-        const response = await axios.get(`${base_url}/api/demoapp/v1/demoapp/?status=rejected`,
-          config,
-          );
+        const response = await apiClient.get('/api/demoapp/v1/demoapp/?status=rejected');
         return response.data;
       } catch (error: any) {
         console.log("API error response:", error);
         throw error;
       } 
+};
+
+export const updateDemoStatusAPI = async (demoId: number, status: string): Promise<any> => {
+  try {
+    const response = await apiClient.patch(`/api/demoapp/v1/demoapp/${demoId}/`, { status });
+    return response.data;
+  } catch (error: any) {
+    console.error("API error response:", error.response?.data);
+    throw error;
+  }
 };

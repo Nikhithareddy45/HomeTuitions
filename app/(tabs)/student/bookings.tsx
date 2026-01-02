@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    Text,
+    View,
 } from 'react-native';
 
-import BookingCard from '@/components/Bookings/BookingCard';
-import BookingTabs from '@/components/Bookings/BookingTopTabs';
+import BookingCard from '@/components/booking/BookingCard';
+import BookingTabs from '@/components/booking/BookingTopTabs';
 import {
-  GetMyApplicationsAPI,
-  getAcceptedAPI,
-  getPendingAPI,
-  getRejectedAPI,
+    GetMyApplicationsAPI,
+    getAcceptedAPI,
+    getPendingAPI,
+    getRejectedAPI,
 } from '@/services/booking';
 
 const Bookings = () => {
@@ -103,7 +103,7 @@ const renderBooking = ({ item }: { item: any }) => (
           <Text className="text-2xl font-bold text-center my-4">
             My Bookings
           </Text>
-          <BookingTabs activeTab={activeTab} onChange={setActiveTab} />
+          <BookingTabs activeTab={activeTab} onTabChange={setActiveTab} />
         </View>
       }
       ListEmptyComponent={

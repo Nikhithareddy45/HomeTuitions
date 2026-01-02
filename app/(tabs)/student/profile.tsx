@@ -9,13 +9,12 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Text,
-  View,
+  View
 } from 'react-native';
 
-import AddressForm from '@/components/AddressComp';
+import AddressForm from '@/components/forms/AddressForm';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { AddressAPI, GetProfileAPI, UpdateStudentAPI } from '@/services/user';

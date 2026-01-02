@@ -69,3 +69,18 @@ export interface EnquiryRound {
   round: number;
   tutors: TutorSelection[];
 }
+
+type EnquiryStatus =
+    | "application_received"
+    | "tutors_sent"
+    | "demo_requested"
+    | "demo_completed"
+    | "tutor_finalized"
+    | "cancelled";
+
+interface EnquiryFlowUI {
+    id: number;
+    status: EnquiryStatus;
+    status_label: string;
+    created: string;
+}

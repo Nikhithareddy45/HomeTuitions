@@ -1,5 +1,5 @@
 
-import EnquiryRequestCard from '@/components/Enquirys/EnquiryCard';
+import EnquiryRequestCard from '@/components/enquiry/EnquiryCard';
 import { BackButton } from '@/components/ui/BackButton';
 import { getMyEnquiriesAPI } from '@/services/enquiry';
 import { useRefreshStore } from '@/store/useRefreshStore';
@@ -113,7 +113,7 @@ const EnquiryTabScreen = () => {
             }
             renderItem={({ item }) => (
               <EnquiryRequestCard
-                data={item}
+                enquiry={item}
                 onPress={() =>
                   router.push(`/sections/OfflineStatus/${item.id}`)
                 }

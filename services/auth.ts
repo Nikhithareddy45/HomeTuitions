@@ -1,17 +1,11 @@
-import axios from "axios";
-import { UserData,TutorData,LoginData } from "../types/authTypes";
-import { base_url } from "../utils/url";
-
+import apiClient from "./apiClient";
+import { UserData, TutorData, LoginData } from "../types/authTypes";
 
 export const registerStudent = async (payload: UserData): Promise<any> => {
   try { 
-    const config = {
-      headers: { "Content-Type": "application/json" },
-    };
-    const response = await axios.post(
-      `${base_url}/api/users/v1/auth/register/`,
-      payload,
-      config
+    const response = await apiClient.post(
+      '/api/users/v1/auth/register/',
+      payload
     );
     return response.data;
   } catch (error: any) {
@@ -19,15 +13,12 @@ export const registerStudent = async (payload: UserData): Promise<any> => {
     throw error;
   }
 };
+
 export const registerTutor = async (payload: TutorData): Promise<any> => {
   try { 
-    const config = {
-      headers: { "Content-Type": "application/json" },
-    };
-    const response = await axios.post(
-      `${base_url}/api/tutors/v1/auth/register/`,
-      payload,
-      config
+    const response = await apiClient.post(
+      '/api/tutors/v1/auth/register/',
+      payload
     );
     return response.data;
   } catch (error: any) {
@@ -35,13 +26,12 @@ export const registerTutor = async (payload: TutorData): Promise<any> => {
     throw error;
   }
 };
+
 export const LoginAPI = async ({ username, password }: LoginData): Promise<any> => {
   try {   
-    const response = await axios.post(`${base_url}/api/users/v1/auth/login/`,{ username, password },
+    const response = await apiClient.post('/api/users/v1/auth/login/',
+      { username, password },
       {
-        headers: {
-          "Content-Type": "application/json",
-        },
         withCredentials: false,
       }
     );

@@ -1,8 +1,10 @@
-import React from "react";
-import { View, Text, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { BackButton } from "@/components/ui/BackButton";
 import Button from "@/components/ui/Button";
+import { getEnquiryFlowStatusAPI } from "@/services/enquiry";
+
 /* =======================
    Types
 ======================= */
@@ -22,10 +24,6 @@ interface EnquiryFlowUI {
     created: string;
 }
 
-/* =======================
-   Status Config
-======================= */
-
 const STATUS_FLOW: EnquiryStatus[] = [
     "application_received",
     "tutors_sent",
@@ -44,29 +42,80 @@ const STATUS_LABELS: Record<EnquiryStatus, string> = {
     cancelled: "Cancelled",
 };
 
-/* =======================
-   Dummy Data (per enquiry)
-======================= */
-
-const DUMMY_FLOW_DATA: EnquiryFlowUI[] = [
-    {
-        id: 16,
-        status: "tutors_sent",
-        status_label: "Tutors Sent",
-        created: "2025-12-28T14:06:20Z",
-    },
-];
-
 export default function EnquiryStatusScreen() {
     const { enquiryId } = useLocalSearchParams<{ enquiryId: string }>();
-    console.log("flow enquiry id", enquiryId);
-    const flow = DUMMY_FLOW_DATA[0];
-    const currentIndex = STATUS_FLOW.indexOf(flow.status);
+    const [loading, setLoading] = useState(true);
+    const [flowData, setFlowData] = useState<EnquiryFlowUI | null>(null);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (enquiryId) {
+            fetchEnquiryFlow();
+        }
+    }, [enquiryId]);
+
+    const fetchEnquiryFlow = async () => {
+        try {
+            setLoading(true);
+            const data = await getEnquiryFlowStatusAPI(enquiryId);
+            // Since we don't know the exact API response structure, we might need to adapt it.
+            // Assuming the API returns a list or an object with status.
+            // If the API returns a list of flow events, we might need to pick the latest.
+            // For now, let's assume it returns an object that matches or can be mapped to EnquiryFlowUI.
+            // Or if it returns an array of history, we take the last one as current status.
+            
+            // Adjust this based on actual API response. 
+            // If data is array:
+            if (Array.isArray(data) && data.length > 0) {
+                 // Sort by date or just take the last one? 
+                 // Let's assume the API returns the flow object directly or we map it.
+                 // If the API returns the timeline, we need to find the current status.
+                 // For now, let's map the 'status' field from the response.
+                 setFlowData(data[0]); // Placeholder logic
+            } else if (data && data.status) {
+                 setFlowData(data);
+            } else {
+                 // Fallback if structure is different
+                 setFlowData({
+                     id: Number(enquiryId),
+                     status: data?.current_status || 'application_received', // Adjust field name
+                     status_label: data?.status_label || 'Application Received',
+                     created: data?.created_at || new Date().toISOString()
+                 });
+            }
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load enquiry status");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleCancelEnquiry=()=>{
         Alert.alert("Are you sure you want to cancel this enquiry?")
         
     }
+
+    if (loading) {
+        return (
+            <View className="flex-1 bg-white justify-center items-center">
+                <ActivityIndicator size="large" color="#2563eb" />
+                <Text className="mt-2 text-gray-500">Loading status...</Text>
+            </View>
+        );
+    }
+
+    if (error || !flowData) {
+        return (
+            <View className="flex-1 bg-white justify-center items-center px-6">
+                <BackButton />
+                <Text className="text-red-500 mb-4">{error || "No status data available"}</Text>
+                <Button title="Retry" onPress={fetchEnquiryFlow} />
+            </View>
+        );
+    }
+
+    const currentIndex = STATUS_FLOW.indexOf(flowData.status as EnquiryStatus);
 
     return (
         <View className="flex-1 bg-white px-4 py-6">

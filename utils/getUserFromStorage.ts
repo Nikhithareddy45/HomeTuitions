@@ -4,7 +4,7 @@ import { queryClient } from "./reactQueryClient";
 /**
  * Store token in local storage
  */
-export const getTokenFromStorage = async (): Promise<string | null> => {
+export const getUserFromStorage = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem("token");
   } catch (error) {
