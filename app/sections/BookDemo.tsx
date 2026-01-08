@@ -22,27 +22,31 @@ const BookDemo: React.FC = () => {
   const { tutorId } = useLocalSearchParams<{ tutorId?: string }>();
   const router = useRouter();
   const { refreshToken } = useRefreshStore();
-  
+
   const [loading, setLoading] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
   const [formData, setFormData] = useState({
-    username: '',
-    tutorId: tutorId || '',
-    email: '',
-    mobile_number: '',
+    tutor_id: tutorId || '',
+    contact_name: '',
+    contact_email: '',
+    contact_mobile: '',
+    demo_date: '',
+    demo_time: '',
+    message: '',
     address: {
       street: '',
       city: '',
       state: '',
       pin_code: '',
-      country: ''
+      country: '',
     },
-    demoDate: '',
-    demoTime: '',
-    message: ''
   });
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Reset form when tutorId changes or refreshToken changes
+  // Load user data
   useEffect(() => {
     if (!tutorId) {
       Alert.alert(
@@ -53,114 +57,78 @@ const BookDemo: React.FC = () => {
       return;
     }
 
-    // Reset form with current user data
     const loadUserData = async () => {
       try {
-        const currentUser = await getCurrentUser();
-        if (currentUser) {
+        const user = await getCurrentUser();
+        if (user) {
           setFormData(prev => ({
             ...prev,
-            tutorId,
-            username: currentUser.username || '',
-            email: currentUser.email || '',
-            mobile_number: currentUser.mobile_number || '',
+            tutor_id: tutorId,
+            contact_name: user.username || '',
+            contact_email: user.email || '',
+            contact_mobile: user.mobile_number || '',
             address: {
-              ...prev.address,
-              ...(currentUser.address || {})
-            }
-          }));
-        } else {
-          setFormData(prev => ({
-            ...prev,
-            tutorId,
-            username: '',
-            email: '',
-            mobile_number: '',
-            address: { ...prev.address }
+              street: user.address?.street || '',
+              city: user.address?.city || '',
+              state: user.address?.state || '',
+              pin_code: user.address?.pin_code || '',
+              country: user.address?.country || '',
+            },
           }));
         }
-      } catch (error) {
-        console.error('Error loading user data:', error);
+      } catch (err) {
+        console.error('Failed to load user data', err);
       }
     };
 
     loadUserData();
   }, [tutorId, refreshToken]);
 
-  
-  const handleChange = (key: string, value: string) => {
-    setFormData(prev => {
-      const updated = { ...prev, [key]: value };
-      return updated;
-    });
-  };
-  
   const handleSubmit = async () => {
-    if (!formData.tutorId) {
-      Alert.alert('Error', 'Tutor ID is missing. Please try again.');
+    if (!formData.tutor_id) {
+      Alert.alert('Error', 'Tutor ID is missing');
       return;
     }
 
+    const payload = {
+      tutor_id: Number(formData.tutor_id),
+      contact_name: formData.contact_name,
+      contact_email: formData.contact_email,
+      contact_mobile: formData.contact_mobile,
+      demo_date: formData.demo_date,
+      demo_time: formData.demo_time,
+      message: formData.message,
+      address: {
+        street: formData.address.street,
+        city: formData.address.city,
+        state: formData.address.state,
+        country: formData.address.country,
+        pin_code: formData.address.pin_code,
+      },
+    };
+
     try {
       setLoading(true);
-      const payload = {
-        tutorId: formData.tutorId,
-        message: formData.message,
-        demoDate: formData.demoDate,
-        demoTime: formData.demoTime,
-      };
-      console.log("Frontend payload",payload)
+      console.log('Booking demo payload:', payload);
+
       const response = await BookDemoAPI(payload);
-      console.log("Backend response",response)
-      
-      if (response.ok) {
-        Alert.alert(
-          'Success',
-          response.message || 'Demo booked successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: async () => {
-                // Reset form and go back
-                try {
-                  const currentUser = await getCurrentUser();
-                  setFormData({
-                    username: currentUser?.username || '',
-                    tutorId: formData.tutorId,
-                    email: currentUser?.email || '',
-                    mobile_number: currentUser?.mobile_number || '',
-                    address: {
-                      street: currentUser?.address?.street || '',
-                      city: currentUser?.address?.city || '',
-                      state: currentUser?.address?.state || '',
-                      pin_code: currentUser?.address?.pin_code || '',
-                      country: currentUser?.address?.country || ''
-                    },
-                    demoDate: '',
-                    demoTime: '',
-                    message: ''
-                  });
-                  setSelectedLocation(null);
-                } catch (error) {
-                  console.error('Error resetting form:', error);
-                }
-              }
-            }
-          ]
-        );
+
+      if (response?.ok) {
+        Alert.alert('Success', response.message || 'Demo booked successfully!', [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ]);
       } else {
-        throw new Error(response.message || 'Failed to book demo');
+        throw new Error(response?.message || 'Failed to book demo');
       }
     } catch (error: any) {
-      console.error('Booking error:', error);
-      Alert.alert(
-        'Error',
-        error.message || 'Failed to book demo. Please try again.'
-      );
+      Alert.alert('Error', error.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -170,121 +138,94 @@ const BookDemo: React.FC = () => {
     >
       <View className="flex-row items-center justify-between py-2">
         <BackButton />
-        <Button
-          title="Reset"
-          onPress={async () => {
-            try {
-              const currentUser = await getCurrentUser();
-              setFormData(prev => ({
-                ...prev,
-                demoDate: '',
-                demoTime: '',
-                message: '',
-                ...(currentUser && {
-                  username: currentUser.username || '',
-                  email: currentUser.email || '',
-                  mobile_number: currentUser.mobile_number || '',
-                  address: {
-                    ...prev.address,
-                    ...(currentUser.address || {})
-                  }
-                })
-              }));
-              setSelectedLocation(null);
-            } catch (error) {
-              console.error('Error resetting form:', error);
-            }
-          }}
-          className="mr-4 bg-white border border-gray-300"
-        />
       </View>
+
       <ScrollView
         contentContainerStyle={{ padding: 24, paddingTop: 2 }}
-        scrollEnabled={true}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View className="items-center mb-8">
-          <Text className="text-3xl font-bold text-primary text-center mb-2">
-            Book Demo
-          </Text>
+        <Text className="text-3xl font-bold text-primary text-center mb-6">
+          Book Demo
+        </Text>
 
+        <Input
+          label="Name"
+          iconName="User"
+          value={formData.contact_name}
+          onChangeText={text =>
+            setFormData(p => ({ ...p, contact_name: text }))
+          }
+        />
+
+        <Input
+          label="Email"
+          iconName="Mail"
+          keyboardType="email-address"
+          value={formData.contact_email}
+          onChangeText={text =>
+            setFormData(p => ({ ...p, contact_email: text }))
+          }
+        />
+
+        <Input
+          label="Mobile Number"
+          iconName="Phone"
+          keyboardType="phone-pad"
+          value={formData.contact_mobile}
+          onChangeText={text =>
+            setFormData(p => ({ ...p, contact_mobile: text }))
+          }
+        />
+
+        <AddressForm
+          address={formData.address}
+          onChange={addr =>
+            setFormData(prev => ({ ...prev, address: addr }))
+          }
+          selectedLocation={selectedLocation}
+          onLocationChange={setSelectedLocation}
+        />
+
+        <DOBPicker
+          label="Demo Date"
+          icon="Calendar"
+          value={formData.demo_date}
+          onChange={date =>
+            setFormData(p => ({ ...p, demo_date: date }))
+          }
+        />
+
+        <TimePicker
+          label="Demo Time"
+          iconName="Clock"
+          value={formData.demo_time}
+          onChange={time =>
+            setFormData(p => ({ ...p, demo_time: time }))
+          }
+        />
+
+        <Input
+          label="Message"
+          iconName="MessageSquare"
+          value={formData.message}
+          onChangeText={text =>
+            setFormData(p => ({ ...p, message: text }))
+          }
+          placeholder="Need demo for 10th CBSE Maths"
+        />
+
+        <View className="mt-6">
+          <Button
+            title="Book Demo"
+            loading={loading}
+            onPress={handleSubmit}
+            icon="check"
+          />
         </View>
-        <View className="gap-2">
-          <Input
-            label="Username"
-            iconName="User"
-            value={formData.username}
-            onChangeText={text => handleChange('username', text)}
-            placeholder="Enter your username"
-            className="mb-4"
-          // error={errors.username}
-          />
-          <Input
-            label="Email Address"
-            iconName="Mail"
-            keyboardType="email-address"
-            value={formData.email}
-            onChangeText={text => handleChange('email', text)}
-            // error={errors.email}
-            placeholder="your.email@example.com"
-            className="mb-4"
-          />
-          <Input
-            label="Mobile Number"
-            iconName="Phone"
-            keyboardType="phone-pad"
-            value={formData.mobile_number}
-            onChangeText={text => handleChange('mobile_number', text)}
-            // error={errors.mobile_number}
-            placeholder="Enter your mobile number"
-            className="mb-4"
-          />
-          <AddressForm
-            address={formData.address}
-            onChange={addr => setFormData(prev => ({ ...prev, address: addr }))}
-            selectedLocation={selectedLocation}
-            onLocationChange={loc => setSelectedLocation(loc)}
-          />
-          <DOBPicker
-            label="Booking Data"
-            icon="Calendar"
-            value={formData.demoDate}
-            onChange={text => {
-              handleChange('demoDate', text);
-            }}
-          />
-
-          <TimePicker
-            label="Start Time"
-            iconName="Clock"
-            value={formData.demoTime}
-            onChange={time => handleChange('demoTime', time)}
-          />
-          <Input
-            label="Message"
-            iconName="MessageSquare"
-            value={formData.message}
-            onChangeText={text => handleChange('message', text)}
-            // error={errors.mobile_number}
-            placeholder="Enter your message"
-            className="mb-4"
-          />
-          <View className="flex-row justify-between mt-4">
-            <View className="flex-1 ml-3">
-              <Button
-                title="Register"
-                loading={loading}
-                onPress={handleSubmit}
-                icon="check"
-                className='w-[90%]'
-              />
-            </View>
-          </View>
-        </View>
-
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
+
 export default BookDemo;

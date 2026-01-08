@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -9,20 +10,15 @@ import {
 } from "react-native";
 
 import {
-  getEnquiryDemoRequestsAPI,
   getSentTutorsAPI,
+  getEnquiryDemoRequestsAPI,
   sendTutorDemoAPI,
+  userApplicationDecisionAPI,
 } from "@/services/enquiry";
 
 import DemoRequestModal from "@/components/enquiry/DemoRequestModal";
 import { BackButton } from "@/components/ui/BackButton";
-import {
-  Calendar,
-  CheckCircle,
-  ExternalLink,
-  RefreshCw,
-  User,
-} from "lucide-react-native";
+import { Calendar, CheckCircle, User } from "lucide-react-native";
 
 /* ================= TYPES ================= */
 
@@ -39,74 +35,63 @@ interface SentTutor {
 
 interface DemoRequest {
   id: number;
-  tutor: {
-    id: number;
-  };
+  tutor: { id: number };
   demo_date: string;
   demo_time: string;
-  message?: string;
+  user_application_accepted: "pending" | "accepted" | "rejected";
+  tutor_application_accepted: "pending" | "accepted" | "rejected";
+  is_application_finalized: boolean;
 }
 
 /* ================= COMPONENT ================= */
 
-export default function ViewStatusScreen() {
-  const { enquiryId: enquiryIdParam } = useLocalSearchParams<{ enquiryId?: string }>();
-  const router = useRouter();
+export default function ViewInfoScreen() {
+  const { enquiryId: enquiryIdParam } =
+    useLocalSearchParams<{ enquiryId?: string }>();
   const enquiryId = Number(enquiryIdParam);
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
-
   const [sentData, setSentData] = useState<SentTutor[]>([]);
-  const [flowData, setFlowData] = useState<any[]>([]);
   const [demoRequests, setDemoRequests] = useState<DemoRequest[]>([]);
-
   const [openModal, setOpenModal] = useState(false);
   const [activeTutor, setActiveTutor] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  /* ================= LOAD DATA ================= */
+  /* ================= LOAD ================= */
 
   useEffect(() => {
-    if (!enquiryId) return;
-    loadPageData();
+    if (enquiryId) loadData();
   }, [enquiryId]);
 
-  const loadPageData = async (refresh = false) => {
-    refresh ? setRefreshing(true) : setLoading(true);
-
+  const loadData = async () => {
+    setLoading(true);
     try {
-      const [tutorRes, demoRes] = await Promise.all([
+      const [sent, demos] = await Promise.all([
         getSentTutorsAPI(enquiryId),
         getEnquiryDemoRequestsAPI(enquiryId),
       ]);
-
-      setSentData(tutorRes || []);
-      setDemoRequests(demoRes || []);
-    } catch (err) {
-      console.error("Failed loading status page", err);
+      setSentData(sent || []);
+      setDemoRequests(demos || []);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
   /* ================= HELPERS ================= */
 
-  const getDemoForTutor = (tutorId: number) =>
-    demoRequests.find((d) => d.tutor.id === tutorId);
+  const getDemo = (tutorId: number) =>
+    demoRequests.find(d => d.tutor.id === tutorId);
 
-  const isDemoCompleted = (demo?: DemoRequest) => {
-    if (!demo) return false;
-    const demoDateTime = new Date(`${demo.demo_date}T${demo.demo_time}`);
-    return new Date() >= demoDateTime;
+  const isDemoCompleted = (demo: DemoRequest) => {
+    const dt = new Date(`${demo.demo_date}T${demo.demo_time}`);
+    return new Date() >= dt;
   };
 
   /* ================= ACTIONS ================= */
 
   const handleSendDemo = async (values: any) => {
     if (!activeTutor) return;
-
     setActionLoading(activeTutor);
     try {
       await sendTutorDemoAPI(
@@ -116,13 +101,22 @@ export default function ViewStatusScreen() {
         values.demo_time,
         values.message || ""
       );
-
-      alert("Demo scheduled successfully");
+      Alert.alert("Success", "Demo scheduled");
       setOpenModal(false);
-      setActiveTutor(null);
-      await loadPageData(true);
-    } catch (err: any) {
-      alert(err.response?.data?.error || "Demo scheduling failed");
+      await loadData();
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDecision = async (
+    demoId: number,
+    decision: "accepted" | "rejected"
+  ) => {
+    setActionLoading(demoId);
+    try {
+      await userApplicationDecisionAPI(demoId, decision);
+      await loadData();
     } finally {
       setActionLoading(null);
     }
@@ -132,32 +126,20 @@ export default function ViewStatusScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#2563eb" />
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 p-6">
-      {/* HEADER */}
-      <View className="flex-row justify-between items-center mb-4">
-        <BackButton/>
-        <Text className="text-2xl font-bold">Application Status</Text>
-
-        <TouchableOpacity
-          onPress={() => loadPageData(true)}
-          className="flex-row items-center gap-2 bg-blue-600 px-4 py-2 rounded-lg"
-        >
-          <RefreshCw size={16} color="white" />
-          <Text className="text-white font-semibold">
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </Text>
-        </TouchableOpacity>
+    <ScrollView className="flex-1 bg-gray-50 p-4">
+      <View className="flex-row items-center mb-4">
+        <BackButton />
+        <Text className="text-xl font-bold ml-3">View Info</Text>
       </View>
 
-      {/* ROUNDS */}
-      {sentData.map((round) => (
+      {sentData.map(round => (
         <View key={round.id} className="bg-white rounded-xl mb-4 overflow-hidden">
           <View className="bg-blue-600 p-3">
             <Text className="text-white font-bold">
@@ -165,53 +147,20 @@ export default function ViewStatusScreen() {
             </Text>
           </View>
 
-          {round.tutors.map((tutor) => {
-            const demo = getDemoForTutor(tutor.id);
+          {round.tutors.map(tutor => {
+            const demo = getDemo(tutor.id);
 
             return (
-              <View
-                key={tutor.id}
-                className="border-b border-gray-200 p-4"
-              >
+              <View key={tutor.id} className="p-4 border-b border-gray-200">
                 {/* Tutor */}
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push({
-                      pathname: '/sections/tutor/[id]',
-                      params: { id: String(tutor.id) }
-                    })
-                  }
-                  className="flex-row items-center gap-3 mb-2"
-                >
-                  <User size={18} color="#2563eb" />
-                  <Text className="text-blue-600 font-semibold">
+                <View className="flex-row items-center gap-2 mb-2">
+                  <User size={16} color="#2563eb" />
+                  <Text className="font-semibold text-blue-600">
                     {tutor.username}
                   </Text>
-                  <ExternalLink size={14} color="#2563eb" />
-                </TouchableOpacity>
+                </View>
 
-                {/* Demo Status */}
-                {!demo && (
-                  <Text className="text-gray-500 mb-2">
-                    No demo scheduled
-                  </Text>
-                )}
-
-                {demo && (
-                  <View className="bg-blue-50 p-3 rounded-lg mb-2">
-                    <View className="flex-row items-center gap-2">
-                      <CheckCircle size={16} color="#2563eb" />
-                      <Text className="font-semibold text-blue-600">
-                        Demo Scheduled
-                      </Text>
-                    </View>
-                    <Text className="text-xs text-gray-600 mt-1">
-                      {demo.demo_date} • {demo.demo_time}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Actions */}
+                {/* NO DEMO */}
                 {!demo && (
                   <TouchableOpacity
                     onPress={() => {
@@ -219,30 +168,76 @@ export default function ViewStatusScreen() {
                       setOpenModal(true);
                     }}
                     className="bg-green-600 px-4 py-2 rounded-lg"
-                    disabled={actionLoading === tutor.id}
                   >
                     <Text className="text-white text-center font-semibold">
-                      {actionLoading === tutor.id
-                        ? "Scheduling..."
-                        : "Schedule Demo"}
+                      Schedule Demo
                     </Text>
                   </TouchableOpacity>
                 )}
 
-                {demo && !isDemoCompleted(demo) && (
-                  <View className="flex-row items-center gap-2 mt-2">
-                    <Calendar size={16} color="#f59e0b" />
-                    <Text className="text-amber-600">
-                      Upcoming Demo
+                {/* DEMO INFO */}
+                {demo && (
+                  <View className="bg-blue-50 p-3 rounded-lg">
+                    <Text className="text-blue-700 font-semibold">
+                      Demo Scheduled
+                    </Text>
+                    <Text className="text-xs text-gray-600">
+                      {demo.demo_date} • {demo.demo_time}
                     </Text>
                   </View>
                 )}
 
-                {demo && isDemoCompleted(demo) && (
+                {/* UPCOMING */}
+                {demo && !isDemoCompleted(demo) && (
+                  <View className="flex-row items-center gap-2 mt-2">
+                    <Calendar size={14} color="#f59e0b" />
+                    <Text className="text-amber-600">Upcoming Demo</Text>
+                  </View>
+                )}
+
+                {/* APPLICATION ACTIONS */}
+                {demo &&
+                  isDemoCompleted(demo) &&
+                  !demo.is_application_finalized &&
+                  demo.user_application_accepted === "pending" && (
+                    <View className="flex-row gap-3 mt-3">
+                      <TouchableOpacity
+                        onPress={() =>
+                          handleDecision(demo.id, "accepted")
+                        }
+                        className="bg-green-600 px-4 py-2 rounded-lg flex-1"
+                      >
+                        <Text className="text-white text-center">
+                          Accept
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() =>
+                          handleDecision(demo.id, "rejected")
+                        }
+                        className="bg-red-600 px-4 py-2 rounded-lg flex-1"
+                      >
+                        <Text className="text-white text-center">
+                          Reject
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                {/* STATUS */}
+                {demo?.user_application_accepted === "accepted" &&
+                  demo?.tutor_application_accepted === "pending" && (
+                    <Text className="mt-2 text-blue-600">
+                      Waiting for tutor acceptance
+                    </Text>
+                  )}
+
+                {demo?.is_application_finalized && (
                   <View className="flex-row items-center gap-2 mt-2">
                     <CheckCircle size={16} color="#16a34a" />
-                    <Text className="text-green-600">
-                      Demo Completed
+                    <Text className="text-green-600 font-bold">
+                      Application Finalized
                     </Text>
                   </View>
                 )}
@@ -252,7 +247,6 @@ export default function ViewStatusScreen() {
         </View>
       ))}
 
-      {/* MODAL */}
       <DemoRequestModal
         open={openModal}
         tutorId={activeTutor}

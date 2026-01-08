@@ -93,7 +93,20 @@ export const getEnquiryDemoRequestsAPI = async (enquiryId: number) => {
     );
     return res.data;
   } catch (error) {
-
+    console.log("API error response:", error);
+    throw error;
   }
 
+};
+export const userApplicationDecisionAPI = async (
+  demoRequestId: number,
+  decision: "accepted" | "rejected"
+) => {
+
+  const response = await apiClient.post(
+    `/api/enquiry/v1/enquiry-demo-requests/${demoRequestId}/user-application-decision/`,
+    { decision },
+  )
+  console.log("Offline api data", response.data)
+  return response.data;
 };
