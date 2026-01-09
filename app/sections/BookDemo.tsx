@@ -1,14 +1,4 @@
-import AddressForm from '@/components/forms/AddressForm';
-import { BackButton } from '@/components/ui/BackButton';
-import Button from '@/components/ui/Button';
-import DOBPicker from '@/components/ui/DOBInput';
-import Input from '@/components/ui/Input';
-import TimePicker from '@/components/ui/TimePicker';
-import { useRefreshStore } from '@/hooks/useRefreshStore';
-import { BookDemoAPI } from '@/services/booking';
-import { getCurrentUser } from '@/utils/getUserFromStorage';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -17,6 +7,41 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
+import AddressForm from '@/components/forms/AddressForm';
+import { BackButton } from '@/components/ui/BackButton';
+import Button from '@/components/ui/Button';
+import DOBPicker from '@/components/ui/DOBInput';
+import Input from '@/components/ui/Input';
+import TimePicker from '@/components/ui/TimePicker';
+
+import { BookDemoAPI } from '@/services/booking';
+import { getCurrentUser } from '@/utils/getUserFromStorage';
+import { useRefreshStore } from '@/hooks/useRefreshStore';
+
+/* ================= TYPES ================= */
+
+interface Address {
+  street: string;
+  city: string;
+  state: string;
+  pin_code: string;
+  country: string;
+}
+
+interface FormData {
+  tutor_id: string | number;
+  contact_name: string;
+  contact_email: string;
+  contact_mobile: string;
+  demo_date: string;
+  demo_time: string;
+  message: string;
+  address: Address;
+}
+
+/* ================= COMPONENT ================= */
 
 const BookDemo: React.FC = () => {
   const { tutorId } = useLocalSearchParams<{ tutorId?: string }>();
@@ -29,7 +54,7 @@ const BookDemo: React.FC = () => {
     lng: number;
   } | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     tutor_id: tutorId || '',
     contact_name: '',
     contact_email: '',
@@ -46,7 +71,8 @@ const BookDemo: React.FC = () => {
     },
   });
 
-  // Load user data
+  /* ================= LOAD USER DATA ================= */
+
   useEffect(() => {
     if (!tutorId) {
       Alert.alert(
@@ -60,29 +86,38 @@ const BookDemo: React.FC = () => {
     const loadUserData = async () => {
       try {
         const user = await getCurrentUser();
-        if (user) {
-          setFormData(prev => ({
-            ...prev,
-            tutor_id: tutorId,
-            contact_name: user.username || '',
-            contact_email: user.email || '',
-            contact_mobile: user.mobile_number || '',
-            address: {
-              street: user.address?.street || '',
-              city: user.address?.city || '',
-              state: user.address?.state || '',
-              pin_code: user.address?.pin_code || '',
-              country: user.address?.country || '',
-            },
-          }));
-        }
-      } catch (err) {
-        console.error('Failed to load user data', err);
+        if (!user) return;
+
+        setFormData(prev => ({
+          ...prev,
+          tutor_id: tutorId,
+          contact_name: user.username || '',
+          contact_email: user.email || '',
+          contact_mobile: user.mobile_number || '',
+          address: {
+            street: user.address?.street || '',
+            city: user.address?.city || '',
+            state: user.address?.state || '',
+            pin_code: user.address?.pin_code || '',
+            country: user.address?.country || '',
+          },
+        }));
+      } catch (error) {
+        console.error('Failed to load user data:', error);
       }
     };
 
     loadUserData();
-  }, [tutorId, refreshToken]);
+  }, [tutorId, refreshToken, router]);
+
+  /* ================= HANDLERS ================= */
+
+  const updateField = useCallback(
+    <K extends keyof FormData>(key: K, value: FormData[K]) => {
+      setFormData(prev => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const handleSubmit = async () => {
     if (!formData.tutor_id) {
@@ -90,38 +125,38 @@ const BookDemo: React.FC = () => {
       return;
     }
 
+    if (!formData.contact_name || !formData.contact_email) {
+      Alert.alert('Error', 'Name and Email are required');
+      return;
+    }
+
+    console.log('formData', formData);
     const payload = {
       tutor_id: Number(formData.tutor_id),
-      contact_name: formData.contact_name,
-      contact_email: formData.contact_email,
-      contact_mobile: formData.contact_mobile,
+      contact_name: formData.contact_name.trim(),
+      contact_email: formData.contact_email.trim(),
+      contact_mobile: formData.contact_mobile.trim(),
       demo_date: formData.demo_date,
       demo_time: formData.demo_time,
-      message: formData.message,
-      address: {
-        street: formData.address.street,
-        city: formData.address.city,
-        state: formData.address.state,
-        country: formData.address.country,
-        pin_code: formData.address.pin_code,
-      },
+      message: formData.message.trim(),
+      address: { ...formData.address },
     };
+    console.log('payload', payload);
 
     try {
       setLoading(true);
-      console.log('Booking demo payload:', payload);
 
       const response = await BookDemoAPI(payload);
+      console.log('response', response);
 
-      if (response?.ok) {
-        Alert.alert('Success', response.message || 'Demo booked successfully!', [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]);
+      if (response?.id) {
+        Alert.alert(
+          'Success',
+          'Demo booked successfully!',
+          [{ text: 'OK', onPress: () => router.push('/(tabs)/student/bookings') }],
+        );
       } else {
-        throw new Error(response?.message || 'Failed to book demo');
+        throw new Error(response?.message || 'Demo booking failed');
       }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Something went wrong');
@@ -129,6 +164,8 @@ const BookDemo: React.FC = () => {
       setLoading(false);
     }
   };
+
+  /* ================= RENDER ================= */
 
   return (
     <KeyboardAvoidingView
@@ -153,9 +190,7 @@ const BookDemo: React.FC = () => {
           label="Name"
           iconName="User"
           value={formData.contact_name}
-          onChangeText={text =>
-            setFormData(p => ({ ...p, contact_name: text }))
-          }
+          onChangeText={text => updateField('contact_name', text)}
         />
 
         <Input
@@ -163,9 +198,7 @@ const BookDemo: React.FC = () => {
           iconName="Mail"
           keyboardType="email-address"
           value={formData.contact_email}
-          onChangeText={text =>
-            setFormData(p => ({ ...p, contact_email: text }))
-          }
+          onChangeText={text => updateField('contact_email', text)}
         />
 
         <Input
@@ -173,16 +206,12 @@ const BookDemo: React.FC = () => {
           iconName="Phone"
           keyboardType="phone-pad"
           value={formData.contact_mobile}
-          onChangeText={text =>
-            setFormData(p => ({ ...p, contact_mobile: text }))
-          }
+          onChangeText={text => updateField('contact_mobile', text)}
         />
 
         <AddressForm
           address={formData.address}
-          onChange={addr =>
-            setFormData(prev => ({ ...prev, address: addr }))
-          }
+          onChange={addr => updateField('address', addr)}
           selectedLocation={selectedLocation}
           onLocationChange={setSelectedLocation}
         />
@@ -191,27 +220,21 @@ const BookDemo: React.FC = () => {
           label="Demo Date"
           icon="Calendar"
           value={formData.demo_date}
-          onChange={date =>
-            setFormData(p => ({ ...p, demo_date: date }))
-          }
+          onChange={date => updateField('demo_date', date)}
         />
 
         <TimePicker
           label="Demo Time"
           iconName="Clock"
           value={formData.demo_time}
-          onChange={time =>
-            setFormData(p => ({ ...p, demo_time: time }))
-          }
+          onChange={time => updateField('demo_time', time)}
         />
 
         <Input
           label="Message"
           iconName="MessageSquare"
           value={formData.message}
-          onChangeText={text =>
-            setFormData(p => ({ ...p, message: text }))
-          }
+          onChangeText={text => updateField('message', text)}
           placeholder="Need demo for 10th CBSE Maths"
         />
 

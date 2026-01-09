@@ -13,7 +13,7 @@ type EnquiryStatus =
     | "application_received"
     | "tutors_sent"
     | "demo_requested"
-    | "demo_completed"
+    // | "demo_completed"
     | "tutor_finalized"
     | "cancelled";
 
@@ -28,7 +28,7 @@ const STATUS_FLOW: EnquiryStatus[] = [
     "application_received",
     "tutors_sent",
     "demo_requested",
-    "demo_completed",
+    // "demo_completed",
     "tutor_finalized",
     "cancelled",
 ];
@@ -37,7 +37,7 @@ const STATUS_LABELS: Record<EnquiryStatus, string> = {
     application_received: "Application Received",
     tutors_sent: "Tutors Sent",
     demo_requested: "Demo Requested",
-    demo_completed: "Demo Completed",
+    // demo_completed: "Demo Completed",
     tutor_finalized: "Tutor Finalized",
     cancelled: "Cancelled",
 };
